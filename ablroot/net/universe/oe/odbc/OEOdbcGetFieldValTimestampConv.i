@@ -1,0 +1,2 @@
+( &IF DEFINED(NoNull) &THEN &ELSE IF GET-LONG(mColStrLen_or_ind[{&Idx}], 1) = -1 THEN ? ELSE &ENDIF 
+datetime(get-short(x__mTSMonthTmp{&Idx}__x, 1), get-short(x__mTSDayTmp{&Idx}__x, 1), GET-short(mDBTableCols[{&Idx}], 1), GET-SHORT(x__mTSHourTmp{&Idx}__x, 1), GET-SHORT(x__mTSMinuteTmp{&Idx}__x,1), Get-SHORT(x__mTSSecondTmp{&Idx}__x,1), integer(get-long(x__mTSFractionTmp{&Idx}__x, 1) / 1000000)  )  )

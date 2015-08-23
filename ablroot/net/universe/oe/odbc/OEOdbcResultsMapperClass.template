@@ -1,0 +1,66 @@
+USING net.universe.oe.odbc.*.
+{net/universe/oe/odbc/oe-odbc-defs.i}
+
+ROUTINE-LEVEL ON ERROR UNDO, THROW.
+CLASS {&OE_ODBC_PACKAGE}.odbc.{&OE_ODBC_CLASS}resultsmapper IMPLEMENTS IOEOdbcResultsMapper:
+  {{&OE_ODBC_PACKAGE_PATH}/{&OE_ODBC_TEMPTABLE}.i &REFERENCE-ONLY=REFERENCE-ONLY &SCOPE=PRIVATE}
+  {net/universe/oe/odbc/ttOEOdbcColumnMetadata.i &REFERENCE-ONLY=REFERENCE-ONLY &SCOPE=PRIVATE}
+
+  CONSTRUCTOR PUBLIC {&OE_ODBC_CLASS}resultsmapper(INPUT TABLE FOR {&OE_ODBC_TEMPTABLE} BIND):
+
+  END CONSTRUCTOR.
+
+  METHOD PUBLIC INT iterateAndMapResults(INPUT oPStmt AS OEOdbcPreparedStatement):
+  
+    {net/universe/oe/odbc/IOEOdbcResultsMapper_maprec_begin.i &OnlyVars}
+
+    {&OE_ODBC_BEGIN_FIELD_REPEAT}
+    def var idx{&OE_ODBC_FIELDNAME}       as int no-undo.
+    {&OE_ODBC_END_FIELD_REPEAT}
+    
+    def var iSortOrder     as int  no-undo.
+
+    def var oStatementMetadata as net.universe.oe.odbc.OEOdbcStatementMetadata no-undo.
+
+    oStatementMetadata = oPstmt:oStatementMetadata.
+    
+    /*
+    oStatementMetadata:bindColumnMetadata(output table ttOEOdbcColumnMetadata bind).
+    output to c:\test\colmeta.txt.
+    for each ttOEOdbcColumnMetaData no-lock:
+    	export ttOEOdbcColumnMetaData.
+    end.
+    output close.
+    */
+
+    assign 
+      {&OE_ODBC_BEGIN_FIELD_REPEAT}
+      idx{&OE_ODBC_FIELDNAME}                  = oStatementMetadata:getColumnIndex("{&OE_ODBC_FIELDNAME}")
+      {&OE_ODBC_END_FIELD_REPEAT}
+      .
+ 
+    empty temp-table {&OE_ODBC_TEMPTABLE}.
+
+    /*    
+    {net/universe/oe/odbc/OEOdbcDateConvVars.i &Idx="idxSomeDateField"}
+    */    
+  
+    {net/universe/oe/odbc/IOEOdbcResultsMapper_maprec_begin.i &OnlyIterate}
+
+    find last {&OE_ODBC_TEMPTABLE} use-index idxSortOrder no-lock no-error.
+    assign iSortOrder = (if avail {&OE_ODBC_TEMPTABLE} then {&OE_ODBC_TEMPTABLE}.sortOrder + 1 else 1).
+
+    CREATE {&OE_ODBC_TEMPTABLE}.
+
+    assign 
+        {&OE_ODBC_TEMPTABLE}.SortOrder                  = iSortOrder
+        {&OE_ODBC_BEGIN_FIELD_REPEAT}
+        {&OE_ODBC_TEMPTABLE}.{&OE_ODBC_FIELDNAME} = {net/universe/oe/odbc/OEOdbcGetFieldVal.i &Idx="idx{&OE_ODBC_FIELDNAME}"  &AsType="{&OE_ODBC_ABL_MEMPTR_GETFUNC}" &NoNull}
+        {&OE_ODBC_END_FIELD_REPEAT}
+        .
+
+    {net/universe/oe/odbc/IOEOdbcResultsMapper_maprec_end.i}
+
+  END METHOD.
+
+END CLASS.
