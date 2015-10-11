@@ -24,6 +24,7 @@ http://www.gnu.org/licenses/lgpl-2.1.txt
 
 using net.universe.oe.odbc.*.
 using net.universe.oe.odbc.examples.customer.CustomerDao.
+using net.universe.oe.odbc.examples.customer.CustomerActionLogDao.
 
 routine-level on error undo, throw.
 class net.universe.oe.odbc.examples.ExampleAppContext:
@@ -31,9 +32,10 @@ class net.universe.oe.odbc.examples.ExampleAppContext:
    def private var cUserName       as char no-undo.
    def private var cAuthentication as char no-undo.
 
-   def private var lOdbcEnvInitialized      as log no-undo init false.
-   def private var lOdbcConInitialized      as log no-undo init false.
-   def private var lCustomerDaoInitialized  as log no-undo init false.
+   def private var lOdbcEnvInitialized              as log no-undo init false.
+   def private var lOdbcConInitialized              as log no-undo init false.
+   def private var lCustomerDaoInitialized          as log no-undo init false.
+   def private var lCustomerActionLogDaoInitialized as log no-undo init false.
 
    def private property oOdbcEnv as OEOdbcEnvironment no-undo
    private get:
@@ -65,6 +67,15 @@ class net.universe.oe.odbc.examples.ExampleAppContext:
    end get.
    private set.
    
+   def public property oCustomerActionLogDao as CustomerActionLogDao no-undo
+   public get:
+     if not valid-object(oCustomerActionLogDao) then do: 
+       assign oCustomerActionLogDao = new CustomerActionLogDao(oOdbcCon)
+              lCustomerActionLogDaoInitialized = true.
+     end.
+     return oCustomerActionLogDao.
+   end get.
+   private set.
 
    constructor public ExampleAppContext(input cServerName as char, input cUserName as char, input cAuthentication as char):
      this-object:cServerName     = cServerName.

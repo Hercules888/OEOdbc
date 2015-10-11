@@ -22,21 +22,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 http://www.gnu.org/licenses/lgpl-2.1.txt
 ----------------------------------------------------------------------*/
 
-&IF DEFINED({&PREFIX}TTCustomer-I) = 0 &THEN
-&GLOBAL-DEFINE {&PREFIX}TTCustomer-I 1
-  
-  
-DEF {&SCOPE} TEMP-TABLE {&PREFIX}ttCustomer NO-UNDO {&REFERENCE-ONLY} 
-  FIELD SortOrder      as int
-  FIELD CustomerId     AS INT 
-  FIELD CustomerName   AS CHAR  format "x(30)"
-  FIELD IsActive       AS LOG
-  field AnnualIncome   as dec format "->>,>>>,>>9.9999"
-  field Sex            as char format "x"
-  field State          as char format "x(2)"
-  field BirthDate      as date format "99/99/9999"
-  field CreatedOn      as datetime-tz
-  index idxSortOrder is primary unique SortOrder
-  INDEX idxPK is unique CustomerId.
+/* This is faster than the second method */
+--insert into "CustomerActionLog" values(1, generate_series(1,250000), 'This is actionlog entry number ' || generate_series(1, 250000));
+insert into "CustomerActionLog" select 1, id, 'This is actionlog entry number  ' || id  from (select generate_series(1,250000) as id) as ids;
 
-&ENDIF
+

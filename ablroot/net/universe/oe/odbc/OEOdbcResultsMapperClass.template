@@ -2,15 +2,17 @@ USING net.universe.oe.odbc.*.
 {net/universe/oe/odbc/oe-odbc-defs.i}
 
 ROUTINE-LEVEL ON ERROR UNDO, THROW.
-CLASS {&OE_ODBC_PACKAGE}.odbc.{&OE_ODBC_CLASS}resultsmapper IMPLEMENTS IOEOdbcResultsMapper:
+CLASS {&OE_ODBC_PACKAGE}.{&OE_ODBC_CLASS} INHERITS OEOdbcResultsMapper:
   {{&OE_ODBC_PACKAGE_PATH}/{&OE_ODBC_TEMPTABLE}.i &REFERENCE-ONLY=REFERENCE-ONLY &SCOPE=PRIVATE}
   {net/universe/oe/odbc/ttOEOdbcColumnMetadata.i &REFERENCE-ONLY=REFERENCE-ONLY &SCOPE=PRIVATE}
 
-  CONSTRUCTOR PUBLIC {&OE_ODBC_CLASS}resultsmapper(INPUT TABLE FOR {&OE_ODBC_TEMPTABLE} BIND):
-
+  CONSTRUCTOR PUBLIC {&OE_ODBC_CLASS}(INPUT TABLE FOR {&OE_ODBC_TEMPTABLE} BIND,
+                                         input oResultsCallback as IOEOdbcResultsCallback,
+                                         input iNrOfRecsPerBatch as int):
+    super(temp-table {&OE_ODBC_TEMPTABLE}:handle, ?, ?).
   END CONSTRUCTOR.
 
-  METHOD PUBLIC INT iterateAndMapResults(INPUT oPStmt AS OEOdbcPreparedStatement):
+  METHOD PUBLIC OVERRIDE INT iterateAndMapResults(INPUT oPStmt AS OEOdbcPreparedStatement):
   
     {net/universe/oe/odbc/IOEOdbcResultsMapper_maprec_begin.i &OnlyVars}
 

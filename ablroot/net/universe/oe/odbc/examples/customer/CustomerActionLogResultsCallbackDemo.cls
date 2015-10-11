@@ -22,21 +22,18 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 http://www.gnu.org/licenses/lgpl-2.1.txt
 ----------------------------------------------------------------------*/
 
-&IF DEFINED({&PREFIX}TTCustomer-I) = 0 &THEN
-&GLOBAL-DEFINE {&PREFIX}TTCustomer-I 1
-  
-  
-DEF {&SCOPE} TEMP-TABLE {&PREFIX}ttCustomer NO-UNDO {&REFERENCE-ONLY} 
-  FIELD SortOrder      as int
-  FIELD CustomerId     AS INT 
-  FIELD CustomerName   AS CHAR  format "x(30)"
-  FIELD IsActive       AS LOG
-  field AnnualIncome   as dec format "->>,>>>,>>9.9999"
-  field Sex            as char format "x"
-  field State          as char format "x(2)"
-  field BirthDate      as date format "99/99/9999"
-  field CreatedOn      as datetime-tz
-  index idxSortOrder is primary unique SortOrder
-  INDEX idxPK is unique CustomerId.
 
-&ENDIF
+using net.universe.oe.odbc.*.
+
+class net.universe.oe.odbc.examples.customer.CustomerActionLogResultsCallbackDemo implements net.universe.oe.odbc.IOEOdbcResultsCallback:
+
+  method public  void onBeforeBatch():
+    message "before batch".
+  end method.
+  method public void onNewBatch(input table-handle TempTableBatch, output lClearTT as log):
+    message "in batch".
+  end method.
+  method public void onAfterBatch():
+    message "after batch".
+  end method.
+end class.

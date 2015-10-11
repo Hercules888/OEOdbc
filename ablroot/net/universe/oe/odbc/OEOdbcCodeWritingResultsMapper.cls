@@ -33,6 +33,7 @@ CLASS net.universe.oe.odbc.OEOdbcCodeWritingResultsMapper INHERITS OEOdbcResults
 
   def stream sIn.
   def stream sOut.
+  def private var hTT as handle no-undo.
 
   def public property cOutputFilePath    as char no-undo init ?
   public get.
@@ -77,16 +78,21 @@ CLASS net.universe.oe.odbc.OEOdbcCodeWritingResultsMapper INHERITS OEOdbcResults
   END CONSTRUCTOR.
   
   METHOD PRIVATE CHAR getABLFieldTypeBySQLFieldType(input iDataType as int):
+ 
     IF iDataType = {&SQL_WVARCHAR} or
        iDataType = {&SQL_VARCHAR} or
-       iDataType = {&SQL_CHAR}    then return 'CHARACTER'.
+       iDataType = {&SQL_CHAR} or
+       iDataType = {&SQL_WCHAR} then return 'CHARACTER'.
 
     IF iDataType = {&SQL_INTEGER} then return 'INTEGER'.
   
     IF iDataType = {&SQL_BIT}     then return 'LOGICAL'.
-    /* if iDataType = {&SQL_TYPE_TIMESTAMP} then */ /* Not supported yet */
     if iDataType = {&SQL_BIGINT} or iDataType = {&SQL_NUMERIC} then return 'DECIMAL'.
     if iDataType = {&SQL_DOUBLE} or iDataType = {&SQL_DECIMAL} then return 'DECIMAL'.
+    if iDataType = {&SQL_FLOAT} then return 'DECIMAL'.
+    if iDataType = {&SQL_TYPE_DATE} then return 'DATE'.
+    if iDataType = {&SQL_TYPE_TIMESTAMP} then return 'DATETIME-TZ'.
+    
     return "??? UNSUPPORTED TYPE(" + string(iDataType) + ") ???".
  
   END METHOD.
@@ -94,7 +100,8 @@ CLASS net.universe.oe.odbc.OEOdbcCodeWritingResultsMapper INHERITS OEOdbcResults
   METHOD PRIVATE CHAR getABLMemptrGetfuncBySQLFieldType(input iDataType as int):
     IF iDataType = {&SQL_WVARCHAR} or
        iDataType = {&SQL_VARCHAR} or
-       iDataType = {&SQL_CHAR}    then return 'STRING'.
+       iDataType = {&SQL_CHAR} or
+       iDataType = {&SQL_WCHAR}  then return 'STRING'.
 
 
     IF iDataType = {&SQL_INTEGER} then return 'LONG'.
@@ -103,6 +110,7 @@ CLASS net.universe.oe.odbc.OEOdbcCodeWritingResultsMapper INHERITS OEOdbcResults
     /* if iDataType = {&SQL_TYPE_TIMESTAMP} then */ /* Not supported yet */
     if iDataType = {&SQL_BIGINT} or iDataType = {&SQL_NUMERIC} then return 'DOUBLE'.
     if iDataType = {&SQL_DOUBLE} or iDataType = {&SQL_DECIMAL} then return 'DOUBLE'.
+    if iDataType = {&SQL_FLOAT} then return 'FLOAT'.
     return "??? UNSUPPORTED TYPE(" + string(iDataType) + ") ???".
   END METHOD.
   
@@ -128,7 +136,7 @@ CLASS net.universe.oe.odbc.OEOdbcCodeWritingResultsMapper INHERITS OEOdbcResults
     IF cOEOdbcTemptable = ? THEN
        assign cOEOdbcTempTable = 'tt' + cOEOdbcClass.
 
-    
+			
     input stream sIn from value(search(cTemplateFilePath)).
     output stream sOut to value(cOutputFilePath).
     REPEAT:
