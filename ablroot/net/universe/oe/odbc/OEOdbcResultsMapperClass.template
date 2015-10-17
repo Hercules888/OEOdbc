@@ -9,7 +9,7 @@ CLASS {&OE_ODBC_PACKAGE}.{&OE_ODBC_CLASS} INHERITS OEOdbcResultsMapper:
   CONSTRUCTOR PUBLIC {&OE_ODBC_CLASS}(INPUT TABLE FOR {&OE_ODBC_TEMPTABLE} BIND,
                                          input oResultsCallback as IOEOdbcResultsCallback,
                                          input iNrOfRecsPerBatch as int):
-    super(temp-table {&OE_ODBC_TEMPTABLE}:handle, ?, ?).
+    super(temp-table {&OE_ODBC_TEMPTABLE}:handle, oResultsCallback, iNrOfRecsPerBatch).
   END CONSTRUCTOR.
 
   METHOD PUBLIC OVERRIDE INT iterateAndMapResults(INPUT oPStmt AS OEOdbcPreparedStatement):
