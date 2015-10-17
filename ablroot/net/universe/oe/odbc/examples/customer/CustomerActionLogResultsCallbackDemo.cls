@@ -27,13 +27,25 @@ using net.universe.oe.odbc.*.
 
 class net.universe.oe.odbc.examples.customer.CustomerActionLogResultsCallbackDemo implements net.universe.oe.odbc.IOEOdbcResultsCallback:
 
+  {net/universe/oe/odbc/examples/customer/ttCustomerActionLog.i &REFERENCE-ONLY=REFERENCE-ONLY}
+  
+  constructor public CustomerActionLogResultsCallbackDemo():
+    /* message "CustomerActionLogCallback - constructor()". */
+  end constructor.
   method public  void onBeforeBatch():
-    message "before batch".
+    message "CustomerActionLogCallback - onBeforeBatch()".
   end method.
-  method public void onNewBatch(input table-handle TempTableBatch, output lClearTT as log):
-    message "in batch".
+  method public void onNewBatch(input table-handle httCustomerActionLog, output lClearTT as log):
+    onNewBatchInt(table-handle httCustomerActionLog by-reference, output lClearTT).
+  end method.
+  method private void onNewBatchInt(input table ttCustomerActionLog, output lClearTT as log):
+    message "CustomerActionLogCallback - onNewBatch()".
+    for each ttCustomerActionLog no-lock:
+      message "CustomerId: " customerId " / logEntryId: " logEntryId " / logEntry: " logEntry.  
+    end.
+    lClearTT = true.
   end method.
   method public void onAfterBatch():
-    message "after batch".
+    message "CustomerActionLogCallback - onAfterBatch()".
   end method.
 end class.

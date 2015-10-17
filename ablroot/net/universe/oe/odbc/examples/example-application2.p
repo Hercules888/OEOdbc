@@ -41,8 +41,8 @@ do on error undo, throw:
   def var iNrOfLoops     as int no-undo init 10.
 
   oXmplAppCtx = new ExampleAppContext("testdbdsn","postgres","pgadmin").
-  
-  oXmplAppCtx :oCustomerActionLogDao:GetAllCustomerActionLogsByCallback(output table ttCustomerActionLog by-reference, oCallback, 10).
+  oCallback = new CustomerActionLogResultsCallbackDemo().
+  oXmplAppCtx :oCustomerActionLogDao:GetAllCustomerActionLogsByCallback(output table ttCustomerActionLog by-reference, oCallback, 15).
 end.
 catch oOeOdbcEx as OEOdbcException:
   message "Application Error: " oOeOdbcEx:GetMessage(1) view-as alert-box.

@@ -7,7 +7,7 @@ CLASS net.universe.oe.odbc.examples.customer.CustomerActionLogResultsMapperGen I
   CONSTRUCTOR PUBLIC CustomerActionLogResultsMapperGen(INPUT TABLE FOR ttCustomerActionLog BIND,
                                          input oResultsCallback as IOEOdbcResultsCallback,
                                          input iNrOfRecsPerBatch as int):
-    super(temp-table ttCustomerActionLog:handle, ?, ?).
+    super(temp-table ttCustomerActionLog:handle, oResultsCallback, iNrOfRecsPerBatch).
   END CONSTRUCTOR.
   METHOD PUBLIC OVERRIDE INT iterateAndMapResults(INPUT oPStmt AS OEOdbcPreparedStatement):
   
@@ -42,6 +42,7 @@ CLASS net.universe.oe.odbc.examples.customer.CustomerActionLogResultsMapperGen I
     */    
   
     {net/universe/oe/odbc/IOEOdbcResultsMapper_maprec_begin.i &OnlyIterate}
+   
     find last ttCustomerActionLog use-index idxSortOrder no-lock no-error.
     assign iSortOrder = (if avail ttCustomerActionLog then ttCustomerActionLog.sortOrder + 1 else 1).
     CREATE ttCustomerActionLog.
