@@ -24,7 +24,7 @@ http://www.gnu.org/licenses/lgpl-2.1.txt
             /* Here is the success code */
           end.
           else do:
-            IF x__iRetVal__x  = {&SQL_NO_DATA} then LEAVE x__iteraterecords__mainloop__x.
+            IF x__iRetVal__x  = {&SQL_NO_DATA} then LEAVE x__iteraterecords__batchloop__x.
             else
               OEOdbcUtil:Instance:throwExceptionIfRequiredWithExtras({&SQL_HANDLE_STMT}, oPStmt:iStmtHandle, x__iRetVal__x, 
                                                                      "unable to fetch record in prepared statement [" + string(x__iRetVal__x) + "]").
@@ -35,9 +35,11 @@ http://www.gnu.org/licenses/lgpl-2.1.txt
         if x__lValidResultsCallback__x then  do:
           oResultsCallback:onNewBatch(input table-handle hDefaultTempTable by-reference, output x__lClearTT__x).
           if x__lValidDefaultTT__x  and x__lClearTT__x then hDefaultTempTable:default-buffer-handle:empty-temp-table(). 
+          oResultsCallback:onAfterBatch().
         end. 
         IF x__iRetVal__x  = {&SQL_NO_DATA} then LEAVE x__iteraterecords__mainloop__x.
       END. /* Mainloop */
+   
    
       oPstmt:iNrOfRecs = x__iNrOfRecs__x - 1.
    

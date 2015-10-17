@@ -51,14 +51,15 @@ http://www.gnu.org/licenses/lgpl-2.1.txt
              x__lValidDefaultTT__x = valid-handle(hDefaultTempTable)
              x__lValidResultsCallback__x = valid-object(oResultsCallback) and x__lValidDefaultTT__x.
 
+      if not x__lValidResultsCallback__x then
+        assign x__iMaxNrOfRecsPerBatch__x = 2147483647
+               x__iMaxNrOfBatches__x = 1.
+      else 
+        assign x__iMaxNrOfRecsPerBatch__x = iNrOfRecsPerBatch
+               x__iMaxNrOfBatches__x = 2147483647 / x__iMaxNrOfRecsPerBatch__x.
+    
+      /* message "MaxNrOfRecsPerBatch: " x__iMaxNrOfRecsPerBatch__x. */
      
-     if not x__lValidResultsCallback__x then
-       assign x__iMaxNrOfRecsPerBatch__x = 2147483647
-              x__iMaxNrOfBatches__x = 1.
-     else
-       assign x__iMaxNrOfRecsPerBatch__x = iNrOfRecsPerBatch - 1
-              x__iMaxNrOfBatches__x = 2147483647 / x__iMaxNrOfRecsPerBatch__x.
-
       DO x__q__x = 1 TO x__iNrOfCols__x:
           SET-POINTER-VALUE(mDBTableCols[x__q__x])      = GET-POINTER-VALUE(oPStmt:mDBTableCols[x__q__x]).
           SET-POINTER-VALUE(mColStrLen_or_ind[x__q__x]) = GET-POINTER-VALUE(oPStmt:mColStrLen_or_ind[x__q__x]).
@@ -78,10 +79,11 @@ http://www.gnu.org/licenses/lgpl-2.1.txt
       do x__iNrOfBatches__x = 0 to x__iMaxNrOfBatches__x on stop  undo, leave
                                                          on error undo, leave
                                                          on quit  undo, leave:
+
         x__iteraterecords__batchloop__x:
-        do x__iNrOfRecsThisBatch__x = 0 TO x__iMaxNrOfRecsPerBatch__x on stop  undo, leave
-                                                                      on error undo, leave
-                                                                      on quit  undo, leave:
+        do x__iNrOfRecsThisBatch__x = 0 TO x__iMaxNrOfRecsPerBatch__x - 1 on stop  undo, leave
+                                                                          on error undo, leave
+                                                                          on quit  undo, leave:
           x__hCallSQLFetch__x:invoke().
           x__iRetVal__x = x__hCallSQLFetch__x:return-value.
           if x__iRetVal__x = {&SQL_SUCCESS} or x__iRetVal__x = {&SQL_SUCCESS_WITH_INFO} then do:
