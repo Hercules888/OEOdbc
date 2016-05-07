@@ -41,33 +41,28 @@ CLASS net.universe.oe.odbc.examples.customer.CustomerDao:
 
   method public int insertCustomers(input table ttCustomer):
   
-    def var cSQL    as char no-undo.
-    def var iRetVal as int  no-undo.
+    def var cSQL     as char no-undo.
+    def var iRetVal  as int  no-undo.
+    def var rwBuffer as raw  no-undo.
 
-    DEF VAR oOdbcPStmt            AS OEOdbcPreparedStatement   NO-UNDO.
-    DEF VAR oCustomerParamsMapper AS OEOdbcGenericParamsMapper NO-UNDO.
+    DEF VAR oOdbcPStmt          AS OEOdbcPreparedStatement  NO-UNDO.
+    DEF VAR oBufferParamsMapper AS OEOdbcBufferParamsMapper NO-UNDO.
 
-    oCustomerParamsMapper  = new OEOdbcGenericParamsMapper().
-    oCustomerParamsMapper:setInt(1, 3). 
-    oCustomerParamsMapper:setString(2, "Junior Doe").
-    /*    
-    oCustomerParamsMapper:setDouble(3, 531.0246). 
-    oCustomerParamsMapper:setSex(4, "M"). 
-    oCustomerParamsMapper:setState(5, "IL"). 
-    oCustomerParamsMapper:setDate(6, date(1,31,2007)). 
-    oCustomerParamsMapper:setTimestamp(7, now). 
-    */
+    /* assign cSQL = 'insert into {&CUSTOMER_DB_TABLE} ("sortOrder", "customerId", "customerName") values(?,?,?)'. */
+	
 
-    ASSIGN cSQL = 'insert into {&CUSTOMER_DB_TABLE} ("customerId", "customerName") values(?,?)'.
+	assign cSQL = 'insert into testtable (intf1, intf2, charf1, logf1, decf1, datf1) values(?,?,?,?,?,?)'.
     
     oOdbcPStmt = oOdbcCon:prepareStatement(cSQL).
 
-    iRetVal = oOdbcPStmt:executeQuery(oCustomerParamsMapper, ?).
-
+    oBufferParamsMapper = new OEOdbcBufferParamsMapper(input table ttCustomer by-reference).
+      
+    iRetVal = oOdbcPstmt:executeQuery(oBufferParamsMapper, ?).
+ 
     return iRetVal.
     FINALLY:
       IF VALID-OBJECT(oOdbcPstmt) THEN DELETE OBJECT oOdbcPstmt NO-ERROR.
-      IF valid-object(oCustomerParamsMapper) then delete object oCustomerParamsMapper no-error.
+      IF valid-object(oBufferParamsMapper) then delete object oBufferParamsMapper no-error.
     END FINALLY.
 
   end method.

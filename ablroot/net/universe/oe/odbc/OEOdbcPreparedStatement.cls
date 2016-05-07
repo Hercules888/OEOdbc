@@ -125,6 +125,8 @@ class net.universe.oe.odbc.OEOdbcPreparedStatement:
 
     IF VALID-OBJECT(oOEOdbcParamsmapper) THEN oOEOdbcParamsMapper:iterateAndMapParams(THIS-OBJECT).
 
+
+	
     iRetVal = OEOdbcApi:Instance:SQLExecute(iStmtHandle).
     OEOdbcUtil:Instance:throwExceptionIfRequiredWithExtras({&SQL_HANDLE_STMT}, iStmtHandle, iRetVal, "Unable to execute Prepared Statement").
 
@@ -198,8 +200,8 @@ class net.universe.oe.odbc.OEOdbcPreparedStatement:
                 SQLUINTEGER fraction;[b] 
                 } TIMESTAMP_STRUCT;[a]
                 */
-          else if iDataType = {&SQL_BIGINT}  or
-                  iDataType = {&SQL_NUMERIC} then
+          else if iDataType = {&SQL_BIGINT}  /* or
+                   iDataType = {&SQL_NUMERIC} */ then
             assign iSqlCType    = {&SQL_C_SBIGINT}
                    iColBufSize  =  8
                    iNrOfDecCols = iNrOfDecCols + 1.
@@ -209,9 +211,15 @@ class net.universe.oe.odbc.OEOdbcPreparedStatement:
             assign iSqlCType    = {&SQL_C_DOUBLE}
                    iColBufSize  =  8
                    iNrOfDecCols = iNrOfDecCols + 1.
-          else 
-            undo, throw new OEOdbcException("Unimplemented datatype " + String(iDataType) + " for column " + String(iCol), -1).     
+          else if  iDataType = {&SQL_NUMERIC} then
+		    assign iSqlCType = {&SQL_C_NUMERIC}
+			       iColBufSize = 128
+				   iNrOfTimestampCols = iNrOfTimestampCols + 1.
+		  else
+		  
+            undo, throw new OEOdbcException("ZZUnimplemented datatype " + String(iDataType) + " for column " + String(iCol), -1).     
          
+		  message "Setting column " iCol.
           set-size(mDBTableCols[iCol]) = iColBufSize.
           iRetVal = OEOdbcApi:Instance:SQLBindColV2(iStmtHandle, iCol, iSqlCType, mDBTableCols[iCol],
                                                     iColumnSize, INPUT  mColStrLen_or_Ind[iCol]).

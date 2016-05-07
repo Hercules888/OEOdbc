@@ -41,16 +41,33 @@ do on error undo, throw:
   def var i              as int no-undo.
   def var iNrOfLoops     as int no-undo init 10.
 
-  oXmplAppCtx = new ExampleAppContext("testdbdsn","postgres","pgadmin").
+  /*oXmplAppCtx = new ExampleAppContext("testdbdsn","postgres","pgmaster"). */
   
+  /* oXmplAppCtx = new ExampleAppContext("sqldbdsn","sa","sqladmin"). */
+  oXmplAppCtx = new ExampleAppContext("sqlodbdsn","sa","sqladmin"). 
+  
+  /*
   oXmplAppCtx :oCustomerDao:GetCustomerById(1, output table ttCustomer by-reference).
   for each ttCustomer no-lock:
     disp ttCustomer.
   end.
-  
-  /*
-  oXmplAppCtx :oCustomerDao:insertCustomers(input table ttCustomer by-reference).
   */
+  
+  empty temp-table ttCustomer.
+  do i = 1 to 2:
+    create ttCustomer.
+    assign ttCustomer.sortOrder=i
+	       ttCustomer.customerid=i
+           ttCustomer.customername='customer ' + string(customerId)
+		   ttCustomer.annualincome=123.45
+		   ttCustomer.isactive = ?
+		   ttCustomer.birthdate= /* date(2,22,2002) */ today.
+  end.
+  
+  message "running example" ttCustomer.annualincome view-as alert-box.
+  
+  oXmplAppCtx :oCustomerDao:insertCustomers(input table ttCustomer by-reference).
+  
 
   
   /*

@@ -39,6 +39,8 @@ http://www.gnu.org/licenses/lgpl-2.1.txt
   &global-define DECLTYPE cdecl
 &endif 
 
+&global-define GNU_DECLTYPE cdecl
+
 &global-define SQL_NULL_HANDLE 0
 &global-define SQL_HANDLE_ENV  1
 &global-define SQL_HANDLE_DBC  2

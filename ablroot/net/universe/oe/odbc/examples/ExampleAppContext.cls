@@ -24,6 +24,7 @@ http://www.gnu.org/licenses/lgpl-2.1.txt
 
 using net.universe.oe.odbc.*.
 using net.universe.oe.odbc.examples.customer.CustomerDao.
+using net.universe.oe.odbc.examples.customer.NumerictableDao.
 using net.universe.oe.odbc.examples.customer.CustomerActionLogDao.
 
 routine-level on error undo, throw.
@@ -35,6 +36,7 @@ class net.universe.oe.odbc.examples.ExampleAppContext:
    def private var lOdbcEnvInitialized              as log no-undo init false.
    def private var lOdbcConInitialized              as log no-undo init false.
    def private var lCustomerDaoInitialized          as log no-undo init false.
+   def private var lNumerictableDaoInitialized      as log no-undo init false.
    def private var lCustomerActionLogDaoInitialized as log no-undo init false.
 
    def private property oOdbcEnv as OEOdbcEnvironment no-undo
@@ -66,6 +68,18 @@ class net.universe.oe.odbc.examples.ExampleAppContext:
      return oCustomerDao.
    end get.
    private set.
+
+   def public property oNumerictableDao as NumerictableDao no-undo
+   public get:
+     if not valid-object(oNumerictableDao) then do: 
+       assign oNumerictableDao = new NumerictableDao(oOdbcCon)
+              lNumerictableDaoInitialized = true.
+     end.
+     return oNumerictableDao.
+   end get.
+   private set.
+
+
    
    def public property oCustomerActionLogDao as CustomerActionLogDao no-undo
    public get:
@@ -86,6 +100,9 @@ class net.universe.oe.odbc.examples.ExampleAppContext:
    destructor public ExampleAppContext():
      if lCustomerDaoInitialized then do on error undo, leave:
         if valid-object(oCustomerDao) then delete object oCustomerDao.
+     end.
+     if lNumerictableDaoInitialized then do on error undo, leave:
+        if valid-object(oNumerictableDao) then delete object oNumerictableDao.
      end.
 
      if lOdbcConInitialized then do on error undo, leave:

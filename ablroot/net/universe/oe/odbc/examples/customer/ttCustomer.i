@@ -32,10 +32,14 @@ DEF {&SCOPE} TEMP-TABLE {&PREFIX}ttCustomer NO-UNDO {&REFERENCE-ONLY}
   FIELD CustomerName   AS CHAR  format "x(30)"
   FIELD IsActive       AS LOG
   field AnnualIncome   as dec format "->>,>>>,>>9.9999"
+  /*
   field Sex            as char format "x"
   field State          as char format "x(2)"
+  */
   field BirthDate      as date format "99/99/9999"
+  /*
   field CreatedOn      as datetime-tz
+  */
   index idxSortOrder is primary unique SortOrder
   INDEX idxPK is unique CustomerId.
 
