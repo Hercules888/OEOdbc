@@ -25,8 +25,6 @@ http://www.gnu.org/licenses/lgpl-2.1.txt
 using net.universe.oe.odbc.*.
 {net/universe/oe/odbc/oe-odbc-defs.i}
 
-&global-define liboeodbchelper_sox liboeodbchelper.dll
-&global-define liboeodbchelper_so liboeodbchelper.dll
 
 class net.universe.oe.odbc.OEOdbcHelperApi:
   def private var hCallSQLHExecuteBuffer  as handle no-undo.

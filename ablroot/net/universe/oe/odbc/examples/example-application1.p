@@ -41,10 +41,10 @@ do on error undo, throw:
   def var i              as int no-undo.
   def var iNrOfLoops     as int no-undo init 10.
 
-  /*oXmplAppCtx = new ExampleAppContext("testdbdsn","postgres","pgmaster"). */
+  oXmplAppCtx = new ExampleAppContext("testdbdsn","postgres","pgmaster"). 
   
   /* oXmplAppCtx = new ExampleAppContext("sqldbdsn","sa","sqladmin"). */
-  oXmplAppCtx = new ExampleAppContext("sqlodbdsn","sa","sqladmin"). 
+  /* oXmplAppCtx = new ExampleAppContext("sqlodbdsn","sa","sqladmin").  */
   
   /*
   oXmplAppCtx :oCustomerDao:GetCustomerById(1, output table ttCustomer by-reference).
@@ -54,7 +54,7 @@ do on error undo, throw:
   */
   
   empty temp-table ttCustomer.
-  do i = 1 to 2:
+  do i = 1 to 11500:
     create ttCustomer.
     assign ttCustomer.sortOrder=i
 	       ttCustomer.customerid=i

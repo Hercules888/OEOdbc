@@ -64,6 +64,7 @@ http://www.gnu.org/licenses/lgpl-2.1.txt
   &global-define SQLHDBC long
   &global-define SQLHSTMT long
   &global-define POINTER long
+  &global-define POINTER-SIZE 4
 &else
   &global-define SQLHANDLE  int64
   &global-define SQLHANDLE_PTR int64
@@ -71,6 +72,7 @@ http://www.gnu.org/licenses/lgpl-2.1.txt
   &global-define SQLHDBC int64
   &global-define SQLHSTMT int64
   &global-define POINTER int64
+  &global-define POINTER-SIZE 8
 &endif
 &global-define SQLSMALLINT short
 &global-define SQLUSMALLINT short
@@ -118,8 +120,12 @@ http://www.gnu.org/licenses/lgpl-2.1.txt
 &if opsys = 'WIN32' &then
   /* &global-define LIBODBC_SO C:/Windows/SysWOW64/odbc32.dll */
   &global-define LIBODBC_SO odbc32
+  &global-define liboeodbchelper_so liboeodbchelper
+
 &else
   &global-define LIBODBC_SO libodbc.so
+  &global-define liboeodbchelper_so liboeodbchelper.so
+
 &endif
 
 

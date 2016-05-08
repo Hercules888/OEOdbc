@@ -58,6 +58,10 @@ class net.universe.oe.odbc.OEOdbcPreparedStatement:
   get.
   private set.
   
+  def property lSkipExecute as log no-undo init false
+  get.
+  set.
+  
 
 
   constructor public OEOdbcPreparedStatement(input oOdbcCon as net.universe.oe.odbc.OEOdbcConnection,
@@ -127,7 +131,7 @@ class net.universe.oe.odbc.OEOdbcPreparedStatement:
 
 
 	
-    iRetVal = OEOdbcApi:Instance:SQLExecute(iStmtHandle).
+    if not lSkipExecute then iRetVal = OEOdbcApi:Instance:SQLExecute(iStmtHandle).
     OEOdbcUtil:Instance:throwExceptionIfRequiredWithExtras({&SQL_HANDLE_STMT}, iStmtHandle, iRetVal, "Unable to execute Prepared Statement").
 
       iResultSet = 1.
@@ -217,7 +221,7 @@ class net.universe.oe.odbc.OEOdbcPreparedStatement:
 				   iNrOfTimestampCols = iNrOfTimestampCols + 1.
 		  else
 		  
-            undo, throw new OEOdbcException("ZZUnimplemented datatype " + String(iDataType) + " for column " + String(iCol), -1).     
+            undo, throw new OEOdbcException("Unimplemented datatype " + String(iDataType) + " for column " + String(iCol), -1).     
          
 		  message "Setting column " iCol.
           set-size(mDBTableCols[iCol]) = iColBufSize.

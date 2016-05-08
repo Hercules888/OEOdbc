@@ -1,8 +1,14 @@
 #include <stdio.h>
-/* #include <dlfcn.h> */
 #include <string.h>
 #include <assert.h>
 #include <time.h>
+#include <stdlib.h>
+#ifdef __linux
+#include <dlfcn.h>
+#endif
+#ifdef __win32
+#include <windows.h>
+#endif
 #include "liboeodbchelper.h"
 
 #define FIELDTYPE_CHAR 1
@@ -29,6 +35,7 @@ typedef struct  {
   SQLHSTMT statementHandle;
   unsigned char* openedgeBuffer;
   int openedgeBufferLen;
+  char pad[4];
   SQLBindBufferContext* sqlbindBufferContext;
 } IterateBufferParams;
 
@@ -243,7 +250,7 @@ void processdecfieldaschar(int index, unsigned char* dataptr, int datalen, SQLBi
   
   int dotpos = nibblecount - (pointnibbles + 1);
   
-  byte data=0, nibble=0;
+  char data=0, nibble=0;
   for(int i=0; i<nibblecount; i++) {
   	if(!(i&0x1)){
   	  data=*(dataptr + 1+ (i>>1));
@@ -328,7 +335,7 @@ void processfield(int datatype, int index, void* dataptr, SQLBindBufferContext* 
       //char* data = (char*) dataptr;
       //printf((char*)dataptr);
       #ifdef __DEBUG
-      printf(data);
+      //printf(data);
       #endif
       break;  
     }
@@ -341,7 +348,7 @@ void processfield(int datatype, int index, void* dataptr, SQLBindBufferContext* 
     }
     case FIELDTYPE_LOG: {
       #ifdef __DEBUG
-      printf("%s", ?"true":"false");
+      //printf("%s", ?"true":"false");
       #endif
     }
   }  
@@ -362,12 +369,23 @@ void freeContext(SQLBindBufferContext* sqlbindBufferContext) {
 /* If there is no context passed to the iteratebuffer, then one is allocated 
 */
 SQLRETURN iterateBuffer(IterateBufferParams* iterateBufferParams) {
-    
+
+  /*  
+  printf("iteratebuffer ptr struct (c): %ld\n", iterateBufferParams);
+  printf("Struct size %ld:\n", sizeof(IterateBufferParams)); 
+  printf("SQLHSTMT size %ld:\n", sizeof(SQLHSTMT)); 
+  
+  printf("addrofstmthandle(1) %ld:\n", &(iterateBufferParams->statementHandle));
+  printf("addrofstmthandle(3) %ld:\n", &(iterateBufferParams->openedgeBufferLen));
+  printf("addrofstmthandle(4) %ld:\n", &(iterateBufferParams->sqlbindBufferContext));
+  */
+      
   unsigned char* buffer = iterateBufferParams->openedgeBuffer;
   SQLHSTMT statementHandle = iterateBufferParams->statementHandle;
   SQLBindBufferContext* contextptr = iterateBufferParams->sqlbindBufferContext; 
   //int buflen = iterateBufferParamsPtr->statementHandle;
     
+  
   char encoding[20];
   
   int numfields1            = *(short*)(buffer+4);
@@ -394,7 +412,7 @@ SQLRETURN iterateBuffer(IterateBufferParams* iterateBufferParams) {
   printf("NumFields: %ld\n", numfields);
   #endif
   //printf("NumFields: %ld\n", numfields);
-  
+
   // Count the size required for passing data to the buffer
   if (contextptr==NULL) {
 	printf("Allocating environment (should be one-time)\n");
@@ -673,12 +691,18 @@ void odbcInitialize() {
   printf("In odbcInitialize\n");
   #endif
   
+  #ifdef __win32
   HMODULE odbcModule = GetModuleHandle("odbc32.dll");
-  #ifdef __DEBUG
-  printf("Module: %ld\n", odbcModule);
+  SQLBindParameterXX = (SQLBindParameterPtr) GetProcAddress(odbcModule, "SQLBindParameter");
+  SQLExecuteXX = (SQLExecutePtr) GetProcAddress(odbcModule, "SQLExecute");
   #endif
-  SQLBindParameterXX = (SQLBindParameterPtr)* GetProcAddress(odbcModule, "SQLBindParameter");
-  SQLExecuteXX = (SQLExecutePtr)* GetProcAddress(odbcModule, "SQLExecute");
+  #ifdef __DEBUG
+  //printf("Module: %ld\n", odbcModule);
+  #endif
+  #ifdef __linux
+  SQLBindParameterXX = dlsym(NULL, "SQLBindParameter");
+  SQLExecuteXX = dlsym(NULL, "SQLExecute");
+  #endif
   #ifdef __DEBUG
   printf("Bind parameter: %ld \n", SQLBindParameterXX);
   printf("Execute parameter: %ld \n", SQLExecuteXX);
