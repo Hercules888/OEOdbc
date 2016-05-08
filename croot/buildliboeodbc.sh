@@ -4,5 +4,5 @@
 
 gcc -fPIC -c liboeodbchelper.c -O3 -masm=intel -std=c99
 gcc -shared -o liboeodbchelper.dll liboeodbchelper.o 
-ld -shared -soname liboeodbchelper.so.1.0 -o liboeodbchelper.so -lc liboeodbchelper.o 
+#ld -shared -soname liboeodbchelper.so.1.0 -o liboeodbchelper.so -lc liboeodbchelper.o 
 

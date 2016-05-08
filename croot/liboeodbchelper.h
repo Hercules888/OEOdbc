@@ -1,25 +1,35 @@
 #ifndef __LIB_OEODBCHELPER_H__
 #define __LIB_OEODBCHELPER_H__
 
-// #include <windows.h>
+#ifdef __WINNT__
+#include <windows.h>
+#endif
 #include <sql.h>
 #include <sqltypes.h>
 #include <sqlext.h>
 
 
-typedef SQLRETURN (*SQLBindParameterPtr) (
+typedef SQLRETURN (
+ #ifdef __WINNT__ 
+ __stdcall 
+ #endif 
+ *SQLBindParameterPtr) (
                    SQLHSTMT StatementHandle,
-								   SQLUSMALLINT ParameterNumber,
-								   SQLSMALLINT InputOutputType,
-								   SQLSMALLINT ValueType,
-								   SQLSMALLINT ParameterType,
-								   SQLULEN ColumnSize,
-								   SQLSMALLINT DecimalDigits,
-								   SQLPOINTER ParameterValuePtr,
-								   SQLLEN BufferLength,
-								   SQLLEN * StrLen_or_IndPtr);
+				   SQLUSMALLINT ParameterNumber,
+				   SQLSMALLINT InputOutputType,
+				   SQLSMALLINT ValueType,
+				   SQLSMALLINT ParameterType,
+				   SQLULEN ColumnSize,
+				   SQLSMALLINT DecimalDigits,
+				   SQLPOINTER ParameterValuePtr,
+				   SQLLEN BufferLength,
+				   SQLLEN * StrLen_or_IndPtr);
 
-typedef SQLRETURN (*SQLExecutePtr) (
+typedef SQLRETURN (
+#ifdef __WINNT__
+__stdcall
+#endif
+*SQLExecutePtr) (
                    SQLHSTMT StatementHandle);
 
 

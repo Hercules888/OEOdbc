@@ -53,9 +53,10 @@ CLASS net.universe.oe.odbc.OEOdbcBufferParamsMapper IMPLEMENTS IOEOdbcParamsMapp
 	/* We have 4bytes padding */
 	put-{&pointer}(mIterateBufferParams, 1 + {&POINTER-SIZE} + {&POINTER-SIZE}  + 8) = 0. /* sqlbindBufferContext */
 	
+	/*
 	message "iteratebufferparams struct size(openedge): " get-size(mIterateBufferParams).
 	message "iteratebufferparams struct(openedge) :" get-pointer-value(mIterateBufferParams).
-	
+	*/
 	assign hBufRaw = temp-table ttRaw:default-buffer-handle
            hFldRaw = hBufRaw:buffer-field('data')
 		   hBuf    = hTempTable:default-buffer-handle.
@@ -70,13 +71,13 @@ CLASS net.universe.oe.odbc.OEOdbcBufferParamsMapper IMPLEMENTS IOEOdbcParamsMapp
   METHOD PUBLIC VOID iterateAndMapParams(oPStmt AS OEOdbcPreparedStatement):
     oPStmt:lSkipExecute=true.
     
-	message "StatementHandle (openedge): " oPStmt:iStmtHandle.
+	/* message "StatementHandle (openedge): " oPStmt:iStmtHandle. */
     put-{&pointer}(mIterateBufferParams, 1)  = oPStmt:iStmtHandle. /* statementHandle */
 	put-{&pointer}(mIterateBufferParams, 1 + {&pointer-size} + {&pointer-size} + 8) = 0. /* sqlbindBufferContext */
 
 
 
-    message "Iterating & mapping parameters".
+    /* message "Iterating & mapping parameters". */
 	def var oOEOdbcHelperApi as net.universe.oe.odbc.OEOdbcHelperApi no-undo.
 	def var hCallSQLHExecuteBuffer  as handle no-undo.
 	def var mBufferData as memptr no-undo.
@@ -112,6 +113,16 @@ CLASS net.universe.oe.odbc.OEOdbcBufferParamsMapper IMPLEMENTS IOEOdbcParamsMapp
 		if(hCallSQLHExecuteBuffer:return-value <> {&SQL_SUCCESS}) then 
 		          OEOdbcUtil:Instance:throwExceptionIfRequiredWithExtras({&SQL_HANDLE_STMT}, oPStmt:iStmtHandle, hCallSQLHExecuteBuffer:return-value, "Unable to execute buffer through helper").
 
+				  
+		/*		  
+        message
+ 		  "Field1 (openedge): " get-{&pointer}(mIterateBufferParams, 1)
+		  "~nField2 (openedge): " get-{&pointer}(mIterateBufferParams, 1 + {&pointer-size})
+		  "~nField3 (openedge): " get-long(mIterateBufferParams, 1 + {&pointer-size} + {&pointer-size})
+		  "~nField4 (openedge): " get-{&pointer}(mIterateBufferParams, 1 + {&pointer-size} + {&pointer-size} + 4 + 4 /* padding */ ).
+		
+        quit.
+        */		
 	    hQry:get-next().
   	  end.
 	end.

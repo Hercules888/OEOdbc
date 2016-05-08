@@ -66,7 +66,7 @@ class net.universe.oe.odbc.OEOdbcHelperApi:
 		   hCallSQLHExecuteBuffer:call-type                  = dll-call-type
 		   hCallSQLHExecuteBuffer:persistent                 = true
 		   hCallSQLHExecuteBuffer:num-parameters             = 1
-		   hCallSQLHExecuteBuffer:return-value-dll-type      = "long"
+		   hCallSQLHExecuteBuffer:return-value-dll-type      = "short"
 		   hCallSQLHExecuteBuffer:library-calling-convention = "{&GNU_DECLTYPE}".
 
 	create call hCallSQLHDummy.
@@ -100,9 +100,9 @@ class net.universe.oe.odbc.OEOdbcHelperApi:
 		   
   end constructor.
 
-  method public int SQLHExecuteBuffer (input ptrParams as {&DEF_POINTER}):
+  method public int SQLHExecuteBuffer (input ptrContext as {&DEF_POINTER}):
 
-    hCallSQLHExecuteBuffer:set-parameter(1,  "{&POINTER}",     "input",  ptrParams).
+    hCallSQLHExecuteBuffer:set-parameter(1,  "{&POINTER}",     "input",  ptrContext).
     hCallSQLHExecuteBuffer:invoke().
     return hCallSQLHExecuteBuffer:return-value.
   

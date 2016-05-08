@@ -3,10 +3,10 @@
 #include <assert.h>
 #include <time.h>
 #include <stdlib.h>
-#ifdef __linux
+#ifdef __linux__
 #include <dlfcn.h>
 #endif
-#ifdef __win32
+#ifdef __WINNT__
 #include <windows.h>
 #endif
 #include "liboeodbchelper.h"
@@ -370,16 +370,15 @@ void freeContext(SQLBindBufferContext* sqlbindBufferContext) {
 */
 SQLRETURN iterateBuffer(IterateBufferParams* iterateBufferParams) {
 
-  /*  
+  
+  /*
   printf("iteratebuffer ptr struct (c): %ld\n", iterateBufferParams);
   printf("Struct size %ld:\n", sizeof(IterateBufferParams)); 
   printf("SQLHSTMT size %ld:\n", sizeof(SQLHSTMT)); 
   
-  printf("addrofstmthandle(1) %ld:\n", &(iterateBufferParams->statementHandle));
-  printf("addrofstmthandle(3) %ld:\n", &(iterateBufferParams->openedgeBufferLen));
-  printf("addrofstmthandle(4) %ld:\n", &(iterateBufferParams->sqlbindBufferContext));
+  printf("sqlbindBufferContext (c) %d\n", iterateBufferParams->sqlbindBufferContext);
   */
-      
+
   unsigned char* buffer = iterateBufferParams->openedgeBuffer;
   SQLHSTMT statementHandle = iterateBufferParams->statementHandle;
   SQLBindBufferContext* contextptr = iterateBufferParams->sqlbindBufferContext; 
@@ -405,6 +404,7 @@ SQLRETURN iterateBuffer(IterateBufferParams* iterateBufferParams) {
   
   int numfieldsplus2indata  = *(buffer + afterfielddefsvar2pos + 7);
   
+  assert(numfields1==numfields2);
   #ifdef __DEBUG 
   printf("Encoding: %s\n", encoding);
   //printf("Buffer length: %ld\n", buflen);
@@ -412,10 +412,11 @@ SQLRETURN iterateBuffer(IterateBufferParams* iterateBufferParams) {
   printf("NumFields: %ld\n", numfields);
   #endif
   //printf("NumFields: %ld\n", numfields);
-
   // Count the size required for passing data to the buffer
   if (contextptr==NULL) {
+    #ifdef __DEBUG 
 	printf("Allocating environment (should be one-time)\n");
+	#endif
     //printf("Size of SQLBindBufferContext: %ld\n", sizeof(SQLBindBufferContext));
     //printf("Size of IterateBufferParams: %ld\n", sizeof(IterateBufferParams));
     
@@ -465,21 +466,34 @@ SQLRETURN iterateBuffer(IterateBufferParams* iterateBufferParams) {
     SQLLEN* strLen_or_IndBuffer = malloc(numfields * sizeof(SQLLEN));
     SQLPOINTER sqlbindBuffer = malloc(sqlbindBufferLen);
     SQLPOINTER* sqlbindBufferPtrs = malloc(numfields * sizeof(SQLPOINTER));
-    /*
-    printf("Allocated strLen_or_IndBuffer zone %ld\n", strLen_or_IndBuffer);
-    printf("Sizeof strlenorind %ld\n",numfields * sizeof(SQLLEN));
-    printf("Allocated sqlbindBuffer zone %ld\n", sqlbindBuffer);
-    printf("Sizeof strlenorind %ld\n",sqlbindBufferLen);
-    */
+ 
+    #ifdef __DEBUG 
+    //printf("Allocated strLen_or_IndBuffer zone %ld\n", strLen_or_IndBuffer);
+    //printf("Sizeof strlenorind %ld\n",numfields * sizeof(SQLLEN));
+    //printf("Allocated sqlbindBuffer zone %ld\n", sqlbindBuffer);
+    //printf("Sizeof strlenorind %ld\n",sqlbindBufferLen);
+    #endif
+	
     contextptr->strLen_or_IndBuffer=strLen_or_IndBuffer;
     contextptr->sqlbindBuffer=sqlbindBuffer;
     contextptr->sqlbindBufferPtrs=sqlbindBufferPtrs;
     contextptr->sqlbindBufferLen=sqlbindBufferLen;
 
+	#ifdef __DEBUG 
+    printf("strLen_or_IndBuffer(c): %ld\n", contextptr->strLen_or_IndBuffer);
+    printf("sqlbindBuffer(c): %ld\n",contextptr->sqlbindBuffer);
+    printf("sqlbindBufferPtrs(c): %ld\n", contextptr->sqlbindBufferPtrs);
+    printf("sqlbindBufferLen(c): %ld\n",contextptr->sqlbindBufferLen);
+    #endif
+
+	
+	//return SQL_SUCCESS;
+	
+	
     #ifdef __DEBUG 
     printf("Allocated size for sqlbindBuffer: %ld\n", sqlbindBufferLen);
     #endif
- 
+    
     
     SQLSMALLINT  valueType=0, parameterType=0, decimalDigits=0; 
     SQLLEN       bufferLength=0;	
@@ -487,7 +501,6 @@ SQLRETURN iterateBuffer(IterateBufferParams* iterateBufferParams) {
     int bufferPos = 0;
     int skip=0;
     SQLRETURN ret = 0;
-    char teststring [1024];
     for(SQLUSMALLINT i=0; i<numfields; i++) {
       thisStrLen_or_IndBuffer = strLen_or_IndBuffer + i;
       // printf("thisstrlen %ld - strlen %ld - added %ld\n", thisStrLen_or_IndBuffer, strLen_or_IndBuffer, sizeof(SQLLEN) * i);
@@ -560,7 +573,8 @@ SQLRETURN iterateBuffer(IterateBufferParams* iterateBufferParams) {
           break;
         }
       }
-    
+ 
+  
       /*
       FILE * fp;
       fp = fopen ("c:\\test\\testfile.bin", "w+");
@@ -574,14 +588,17 @@ SQLRETURN iterateBuffer(IterateBufferParams* iterateBufferParams) {
          
       //printf("binding parameter\n");
       ret = SQLBindParameterXX(statementHandle, i+1, SQL_PARAM_INPUT, valueType, parameterType, columnSize, decimalDigits, sqlbindBuffer + bufferPos, bufferLength, thisStrLen_or_IndBuffer);
-      if(ret!=SQL_SUCCESS) return ret; 
-      //printf("SQLBindParameterXX Return: %ld\n", ret);
+      #ifdef __DEBUG
+	  printf("SQLBindParameterXX Return: %ld\n", ret);
+      #endif 
+	  if(ret!=SQL_SUCCESS) return ret; 
       bufferPos+=skip;
       //printf("Returned strlen: %ld\n", thisStrLen_or_IndBuffer);
     } 
   }
   
   
+	  
 
 
   //printf("numfieldsdiv4: %ld\n", numfieldsdiv4);
@@ -691,15 +708,15 @@ void odbcInitialize() {
   printf("In odbcInitialize\n");
   #endif
   
-  #ifdef __win32
+  #ifdef __WINNT__
   HMODULE odbcModule = GetModuleHandle("odbc32.dll");
   SQLBindParameterXX = (SQLBindParameterPtr) GetProcAddress(odbcModule, "SQLBindParameter");
   SQLExecuteXX = (SQLExecutePtr) GetProcAddress(odbcModule, "SQLExecute");
   #endif
   #ifdef __DEBUG
-  //printf("Module: %ld\n", odbcModule);
+  printf("Module: %ld\n", odbcModule);
   #endif
-  #ifdef __linux
+  #ifdef __linux__
   SQLBindParameterXX = dlsym(NULL, "SQLBindParameter");
   SQLExecuteXX = dlsym(NULL, "SQLExecute");
   #endif
