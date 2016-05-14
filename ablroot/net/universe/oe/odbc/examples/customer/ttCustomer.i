@@ -37,9 +37,7 @@ DEF {&SCOPE} TEMP-TABLE {&PREFIX}ttCustomer NO-UNDO {&REFERENCE-ONLY}
   field State          as char format "x(2)"
   */
   field BirthDate      as date format "99/99/9999"
-  /*
-  field CreatedOn      as datetime-tz
-  */
+  field CreatedOn      as datetime
   index idxSortOrder is primary unique SortOrder
   INDEX idxPK is unique CustomerId.
 

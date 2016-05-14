@@ -54,14 +54,15 @@ do on error undo, throw:
   */
   
   empty temp-table ttCustomer.
-  do i = 1 to 11500:
+  do i = 1 to 1:
     create ttCustomer.
-    assign ttCustomer.sortOrder=i
+    assign ttCustomer.sortOrder=-76543210
 	       ttCustomer.customerid=i
            ttCustomer.customername='customer ' + string(customerId)
 		   ttCustomer.annualincome=123.45
 		   ttCustomer.isactive = ?
-		   ttCustomer.birthdate= /* date(2,22,2002) */ today.
+		   ttCustomer.birthdate = /* date(2,22,2002) */ /* today */ date(5,2,1950)
+		   ttCustomer.createdon = now /* datetime(5, 2, 1950, 0, 0, 0, 1 ) */.
   end.
   
   message "running example" ttCustomer.annualincome view-as alert-box.

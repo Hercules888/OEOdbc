@@ -16,6 +16,7 @@
 #define FIELDTYPE_LOG 3
 #define FIELDTYPE_INT 4
 #define FIELDTYPE_DEC 5
+#define FIELDTYPE_DATETIME 34
 
 #define MAX_STRFIELDLEN 8000
 #define MAX_DECFIELDLEN 38
@@ -55,7 +56,8 @@ const char* getFieldTypeDescr(int fieldtype) {
     case FIELDTYPE_LOG: return "LOGICAL";	
     case FIELDTYPE_DEC: return "DECIMAL";
     case FIELDTYPE_DATE: return "DATE";
-    default: return "UNKNOWN";  
+    case FIELDTYPE_DATETIME: return "DATETIME";
+	default: return "UNKNOWN";  
   }	
 }
 
@@ -146,6 +148,8 @@ void getcharfield(int datalen, char* buffer, char* outstr, int outstrlen) {
 }
 
 
+
+
 int getintfield(int intsize, unsigned char* intdata) {
   //assert
   //if(datasize > 4) 	
@@ -161,17 +165,6 @@ int getintfield(int intsize, unsigned char* intdata) {
   }
   
   return buf;
-  /*
-  set-pointer-value(mMem) = iDataPtr.
-  put-long(mWorkBuf, 1) = if get-byte(mMem, 1) > 127 then -1 else 0.
-  do q = 1 to iDataSize:
-    put-byte(mWorkBuf, q) = get-byte(mMem, iDataSize - (q - 1)).
-  end.
-  
-  set-pointer-value(mMem) = 0.
-  // message "Long: " get-long(mWorkbuf, 1) view-as alert-box. 
-  return get-long(mWorkBuf, 1).
-  */
 }
 
 
@@ -179,6 +172,82 @@ void processnullfield(int index, SQLBindBufferContext* contextptr) {
 	
 	SQLLEN* thisStrLen_or_IndBuffer=(contextptr->strLen_or_IndBuffer + index);
 	*thisStrLen_or_IndBuffer=SQL_NULL_DATA;
+}
+
+void getdatetimefield(int tssize, unsigned char* tsdata, time_t* datepart, int* timepart) {
+  *datepart=0;
+  *timepart=0;
+  if(!tssize) return;
+
+  int nrofintbytes=(tssize>4)?4:tssize;
+  int nrofdatebytes=tssize-nrofintbytes;
+
+  //printf("intbytes: %d\n", nrofintbytes);
+  //printf("datebytes: %d\n", nrofdatebytes);
+ 
+  if(nrofdatebytes) {
+    *datepart=(*(tsdata) & 0x80)?-1:0;
+    unsigned char* bufptr = (unsigned char*)datepart;
+    for(int i=0;i<nrofdatebytes;i++) {
+      *(bufptr+i)=*(tsdata + nrofdatebytes - (i+1));  
+      //printf("Intsize: %ld, Loop: %ld, Value: %ld\n", intsize, intsize - (i+1), *(intdata + intsize - (i+1)));
+    }
+  }
+
+  char* timebuf = (char*)timepart;
+  char* srcbuf= tsdata +nrofdatebytes;
+  for(int i=0;i<nrofintbytes;i++) {
+    *(timebuf+i)=*(srcbuf + (nrofintbytes - (i+1)));  
+  }
+}
+
+
+void processdatetimefield(int index, unsigned char* dataptr, int datalen, SQLBindBufferContext* contextptr) {
+  SQL_TIMESTAMP_STRUCT* thisSqlbindBuffer=*(contextptr->sqlbindBufferPtrs + index);
+  time_t datepart=0;
+  int timepart=0;
+  getdatetimefield(datalen, dataptr, &datepart, &timepart);
+  
+  //printf("datepart: %d - %x\n", datepart, datepart);
+  //printf("timepart: %d - %x\n", timepart, timepart);
+  
+  int temp=timepart%1000;
+  thisSqlbindBuffer->fraction=temp;
+  timepart/=1000;
+  temp=timepart/3600;
+  thisSqlbindBuffer->hour=temp;
+  timepart-=(temp*3600);
+  temp=timepart/60;
+  thisSqlbindBuffer->minute=temp;
+  timepart-=(temp*60);
+  thisSqlbindBuffer->second=timepart;
+
+  datepart-=7184; // difference between 2 may 1950 & 1 january 1970
+  datepart *= 86400;
+  //printf("datepart: %d\n", datepart);
+  struct tm* datetm=gmtime(&datepart);
+  
+  //printf("datetm??? %ld\n", datetm);
+  //exit(0);
+  // Unable to parse the date, so let's return an empty date
+  if(datetm==NULL) {
+	thisSqlbindBuffer->year = 0;
+	thisSqlbindBuffer->month = 0;
+	thisSqlbindBuffer->day = 0;
+    thisSqlbindBuffer->hour=0;
+    thisSqlbindBuffer->minute=0;
+    thisSqlbindBuffer->second=0;
+    thisSqlbindBuffer->fraction= 0;
+	SQLLEN* thisStrLen_or_IndBuffer=(contextptr->strLen_or_IndBuffer + index);
+	*thisStrLen_or_IndBuffer=SQL_NULL_DATA;
+  }
+  else {
+    thisSqlbindBuffer->year  = datetm->tm_year + 1900;
+    thisSqlbindBuffer->month = datetm->tm_mon + 1;
+    thisSqlbindBuffer->day   = datetm->tm_mday;
+  }
+  //printf("date:%d/%d/%d\n",thisSqlbindBuffer->day,thisSqlbindBuffer->month,thisSqlbindBuffer->year);
+  //printf("Time: %d:%d:%d.%d\n",thisSqlbindBuffer->hour,thisSqlbindBuffer->minute,thisSqlbindBuffer->second,thisSqlbindBuffer->fraction );
 }
 
 void processdatefield(int index, unsigned char* dataptr, int datalen, SQLBindBufferContext* contextptr) {
@@ -191,13 +260,23 @@ void processdatefield(int index, unsigned char* dataptr, int datalen, SQLBindBuf
   
   struct tm* datetm=gmtime(&dateval);
   //printf("Year: %d - Month: %d - Day: %d\n",datetm->tm_year + 1900, datetm->tm_mon + 1, datetm->tm_mday);
-  
-  thisSqlbindBuffer->year  = datetm->tm_year + 1900;
-  thisSqlbindBuffer->month = datetm->tm_mon + 1;
-  thisSqlbindBuffer->day   = datetm->tm_mday;
-  
+
+  // Unable to parse the date, so let's return an empty date
+  if(datetm==NULL) {
+	thisSqlbindBuffer->year = 0;
+	thisSqlbindBuffer->month = 0;
+	thisSqlbindBuffer->day = 0;
+	SQLLEN* thisStrLen_or_IndBuffer=(contextptr->strLen_or_IndBuffer + index);
+	*thisStrLen_or_IndBuffer=SQL_NULL_DATA;
+  }
+  else {
+    thisSqlbindBuffer->year  = datetm->tm_year + 1900;
+    thisSqlbindBuffer->month = datetm->tm_mon + 1;
+    thisSqlbindBuffer->day   = datetm->tm_mday;
+  }
   
   //printf("Date as integer: %d", dateval);
+
 
   /*
   SQL_DATE_STRUCT struct {
@@ -451,14 +530,18 @@ SQLRETURN iterateBuffer(IterateBufferParams* iterateBufferParams) {
             sqlbindBufferLen+=sizeof(SQL_DATE_STRUCT);
             break;
           }
+          case FIELDTYPE_DATETIME: {
+            sqlbindBufferLen+=sizeof(SQL_TIMESTAMP_STRUCT);
+            break;
+          }
       }
     
  
 
  
-      #ifdef __DEBUG 
+      //#ifdef __DEBUG 
       printf("- Field %ld has type %s(%d)\n", i, getFieldTypeDescr(fieldtype), fieldtype); 
-      #endif
+      //#endif
     }
     
     void* thisSqlbindBuffer=NULL;
@@ -572,6 +655,27 @@ SQLRETURN iterateBuffer(IterateBufferParams* iterateBufferParams) {
           *thisStrLen_or_IndBuffer=0;
           break;
         }
+		case FIELDTYPE_DATETIME: {
+          valueType = SQL_C_TIMESTAMP;
+          parameterType = SQL_TYPE_TIMESTAMP;
+          bufferLength=sizeof(SQL_TIMESTAMP_STRUCT);
+          columnSize=27;
+          decimalDigits=7;
+          skip=bufferLength;
+          //*((char*)thisSqlbindBuffer) = 0;
+          /*
+		  SQL_TIMESTAMP_STRUCT* test = thisSqlbindBuffer;
+		  test->year=1999;
+		  test->month=5;
+		  test->day=13;
+		  test->hour=14;
+		  test->minute=15;
+		  test->second=16;
+		  test->fraction=777;
+          */		  
+		  *thisStrLen_or_IndBuffer=0;
+          break;
+        }
       }
  
   
@@ -678,6 +782,10 @@ SQLRETURN iterateBuffer(IterateBufferParams* iterateBufferParams) {
       }
       case FIELDTYPE_DATE: {
 		processdatefield(index, datalenptr, datalen, contextptr);
+		break;
+      }
+      case FIELDTYPE_DATETIME: {
+		processdatetimefield(index, datalenptr, datalen, contextptr);
 		break;
       }
       default: {
