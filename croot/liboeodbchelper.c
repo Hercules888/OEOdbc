@@ -17,11 +17,14 @@
 #define FIELDTYPE_INT 4
 #define FIELDTYPE_DEC 5
 #define FIELDTYPE_DATETIME 34
+#define FIELDTYPE_DATETIMETZ 40
 
 #define MAX_STRFIELDLEN 8000
+#define MAX_TIMESTAMPTZ_LEN 32
 #define MAX_DECFIELDLEN 38
 #define MAX_DECIMALS 12
 
+#define __USE_FRACTION_OFF
 #define __DEBUG_OFF
 
 typedef struct  {
@@ -57,6 +60,7 @@ const char* getFieldTypeDescr(int fieldtype) {
     case FIELDTYPE_DEC: return "DECIMAL";
     case FIELDTYPE_DATE: return "DATE";
     case FIELDTYPE_DATETIME: return "DATETIME";
+    case FIELDTYPE_DATETIMETZ: return "DATETIME-TZ";
 	default: return "UNKNOWN";  
   }	
 }
@@ -201,6 +205,120 @@ void getdatetimefield(int tssize, unsigned char* tsdata, time_t* datepart, int* 
   }
 }
 
+void processdatetimetzfield(int index, unsigned char* dataptr, int datalen, SQLBindBufferContext* contextptr) {
+  // http://www.cplusplus.com/reference/ctime/strftime/	
+	
+  //printf("In process -> datalen = %d\n", datalen);
+  char* thisSqlbindBuffer=*(contextptr->sqlbindBufferPtrs + index);
+  //printf("timestamp data (process): %s\n", thisSqlbindBuffer);
+
+
+  unsigned char* bufptr=NULL;
+  struct tm* datetm=NULL;
+  time_t timepart=0;
+  int timezone=0;
+  if(datalen > 8) {
+    int nroftimebytes=datalen-8;
+    //printf("Time bytes? %d\n", nroftimebytes);
+  
+    unsigned char *timeptr = dataptr + nroftimebytes - 1; 
+    bufptr = (char*)&timepart;
+    for(int i=0;i<nroftimebytes;i++) {
+      //printf("timebyte[%x] - ", *(timeptr-i));
+      *(bufptr+i)=*(timeptr-i);  
+    }
+    //printf("\n");
+  
+    unsigned char *dateptr = dataptr + datalen - 5; 
+    time_t datepart=(*(dateptr-7) & 0x80)?-1:0;
+    bufptr = (char*)&datepart;
+    for(int i=0;i<4;i++) {
+      *(bufptr+i)=*(dateptr-i);  
+    }
+ 
+    unsigned char *tzptr = dataptr + datalen - 1; 
+    timezone=(*(tzptr-3) & 0x80)?-1:0;
+    bufptr = (char*)&timezone;
+    for(int i=0;i<4;i++) {
+      *(bufptr+i)=*(tzptr-i);  
+    }
+ 
+    //printf("Time: %d - Date: %d - Timezone: %d\n", timepart, datepart, timezone);
+
+    datepart-=7184; // difference between 2 may 1950 & 1 january 1970
+    datepart *= 86400;
+    datepart+=((timepart/1000) + (timezone*60));
+    //printf("datepart: %d\n", datepart);
+    datetm=gmtime(&datepart);
+  }
+  /*
+  // fix this
+  else {
+	 // The null value
+	datetm =
+	datetm->tm_year=50;
+    datetm->tm_mon=4;
+	datetm->tm_mday=2;
+	datetm->tm_hour=0,
+	datetm->tm_min=0,
+	datetm->tm_sec=0,
+	timepart=0,
+	timezone=0
+  }
+  */
+  
+  if(datetm==NULL) {
+	SQLLEN* thisStrLen_or_IndBuffer=(contextptr->strLen_or_IndBuffer + index);
+	*thisStrLen_or_IndBuffer=SQL_NULL_DATA;
+  }
+  else {
+	//  printf("timezone: %d", timezone);
+	
+	int ret = snprintf (thisSqlbindBuffer, MAX_TIMESTAMPTZ_LEN,
+				"%04d-%02d-%02d %02d:%02d:%02d.%03d %c%02d:%02d",
+	            datetm->tm_year + 1900,
+                datetm->tm_mon + 1,
+				datetm->tm_mday,
+				datetm->tm_hour,
+				datetm->tm_min,
+				datetm->tm_sec,
+				timepart%1000,
+				((timezone<0)?'-':'+'),
+				timezone / 60,
+				timezone % 60);
+				
+	assert(ret==30);
+	/*
+	int ret = snprintf (thisSqlbindBuffer, MAX_TIMESTAMPTZ_LEN,
+				"%04d-%02d-%02d %02d:%02d:%02d %c%02d:%02d",
+	            datetm->tm_year + 1900,
+                datetm->tm_mon + 1,
+				datetm->tm_mday,
+				datetm->tm_hour,
+				datetm->tm_min,
+				datetm->tm_sec,
+				((timezone<0)?'-':'+'),
+				timezone / 60,
+				timezone % 60);
+    */
+    //printf("buf: %s - ret: %d\n", thisSqlbindBuffer, ret);
+  }
+  
+  //printf("datetm??? %ld\n", datetm);
+  //exit(0);
+  // Unable to parse the date, so let's return an empty date
+	  /*
+    printf("%d/%d/%d %d:%d:%d +%d",
+	  datetm->tm_year + 1900,
+      datetm->tm_mon + 1,
+      datetm->tm_mday, 
+  	  datetm->tm_hour,
+ 	  datetm->tm_min,
+      datetm->tm_sec,
+	  timezone);
+*/	  
+  
+}
 
 void processdatetimefield(int index, unsigned char* dataptr, int datalen, SQLBindBufferContext* contextptr) {
   SQL_TIMESTAMP_STRUCT* thisSqlbindBuffer=*(contextptr->sqlbindBufferPtrs + index);
@@ -211,8 +329,13 @@ void processdatetimefield(int index, unsigned char* dataptr, int datalen, SQLBin
   //printf("datepart: %d - %x\n", datepart, datepart);
   //printf("timepart: %d - %x\n", timepart, timepart);
   
-  int temp=timepart%1000;
+  #ifdef __USE_FRACTION
+    int temp=timepart%1000;
+  #else
+	int temp=0;
+  #endif
   thisSqlbindBuffer->fraction=temp;
+  
   timepart/=1000;
   temp=timepart/3600;
   thisSqlbindBuffer->hour=temp;
@@ -534,14 +657,30 @@ SQLRETURN iterateBuffer(IterateBufferParams* iterateBufferParams) {
             sqlbindBufferLen+=sizeof(SQL_TIMESTAMP_STRUCT);
             break;
           }
+          case FIELDTYPE_DATETIMETZ: { 
+		  // ISO8601 
+		  // http://infocenter.sybase.com/help/index.jsp?topic=/com.sybase.help.sqlanywhere.12.0.1/dbreference/dtsd.html
+		  // http://www.postgresql.org/docs/8.4/static/datatype-datetime.html
+		  // https://github.com/MariaDB/mariadb-connector-odbc/blob/master/test/datetime.c
+		  // https://support.microsoft.com/en-us/kb/250286
+		  // http://marc.info/?l=freetds&m=119972698418096
+		  // https://www.ibm.com/support/knowledgecenter/SSEPEK_11.0.0/com.ibm.db2z11.doc.odbc/src/tpc/db2z_sqcex.dita
+          // To deal with TimeTz and TimestampTz.
+          // No standard native-SQL representation for these,
+          // so we ask for them as strings and re-parse them.
+		  // 2004-10-19 10:23:54+02 - 1970-01-01 00:00:00+00
+		  
+            sqlbindBufferLen+=MAX_TIMESTAMPTZ_LEN;
+            break;
+          }
       }
     
  
 
  
-      //#ifdef __DEBUG 
+      #ifdef __DEBUG 
       printf("- Field %ld has type %s(%d)\n", i, getFieldTypeDescr(fieldtype), fieldtype); 
-      //#endif
+      #endif
     }
     
     void* thisSqlbindBuffer=NULL;
@@ -657,10 +796,10 @@ SQLRETURN iterateBuffer(IterateBufferParams* iterateBufferParams) {
         }
 		case FIELDTYPE_DATETIME: {
           valueType = SQL_C_TIMESTAMP;
-          parameterType = SQL_TYPE_TIMESTAMP;
+          parameterType = SQL_TIMESTAMP;
           bufferLength=sizeof(SQL_TIMESTAMP_STRUCT);
-          columnSize=27;
-          decimalDigits=7;
+          columnSize=23;
+          decimalDigits=3;
           skip=bufferLength;
           //*((char*)thisSqlbindBuffer) = 0;
           /*
@@ -671,9 +810,26 @@ SQLRETURN iterateBuffer(IterateBufferParams* iterateBufferParams) {
 		  test->hour=14;
 		  test->minute=15;
 		  test->second=16;
-		  test->fraction=777;
+		  test->fraction=1;
           */		  
 		  *thisStrLen_or_IndBuffer=0;
+          break;
+        }
+        case FIELDTYPE_DATETIMETZ: {
+          valueType = SQL_C_CHAR;
+          parameterType = SQL_TIMESTAMP /* SQL_CHAR */ /* SQL_LONG_VARCHAR */;
+          bufferLength=MAX_TIMESTAMPTZ_LEN;
+          columnSize=23;
+          decimalDigits=3;
+          skip=columnSize;
+          *((char*)thisSqlbindBuffer) = 0;
+          *thisStrLen_or_IndBuffer=SQL_NTS;
+		  /*
+		  const char test[] = "2015-04-03 12:34:56.123+01";
+		  printf("Size of test? %d\n", sizeof(test));
+		  strncpy(thisSqlbindBuffer,test, sizeof(test));
+		  printf("Buffer: %s\n", thisSqlbindBuffer);
+		  */
           break;
         }
       }
@@ -696,6 +852,7 @@ SQLRETURN iterateBuffer(IterateBufferParams* iterateBufferParams) {
 	  printf("SQLBindParameterXX Return: %ld\n", ret);
       #endif 
 	  if(ret!=SQL_SUCCESS) return ret; 
+	  //printf("Check!\n");
       bufferPos+=skip;
       //printf("Returned strlen: %ld\n", thisStrLen_or_IndBuffer);
     } 
@@ -744,7 +901,7 @@ SQLRETURN iterateBuffer(IterateBufferParams* iterateBufferParams) {
     /*
     printf("Data length: %ld ", datalen);
     printf("> %s ", getFieldTypeDescr(fieldtype));
-    printf(" @ pos %ld = ", i + 1);
+    printf(" @ pos %ld \n", i + 1);
     */
     int datatype = fieldtype;
     //int index = i  + 1;
@@ -786,6 +943,10 @@ SQLRETURN iterateBuffer(IterateBufferParams* iterateBufferParams) {
       }
       case FIELDTYPE_DATETIME: {
 		processdatetimefield(index, datalenptr, datalen, contextptr);
+		break;
+      }
+      case FIELDTYPE_DATETIMETZ: {
+		processdatetimetzfield(index, datalenptr, datalen, contextptr);
 		break;
       }
       default: {

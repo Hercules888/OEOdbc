@@ -41,10 +41,10 @@ do on error undo, throw:
   def var i              as int no-undo.
   def var iNrOfLoops     as int no-undo init 10.
 
-  oXmplAppCtx = new ExampleAppContext("testdbdsn","postgres","pgmaster"). 
+  /* oXmplAppCtx = new ExampleAppContext("testdbdsn","postgres","pgmaster"). */
   
   /* oXmplAppCtx = new ExampleAppContext("sqldbdsn","sa","sqladmin"). */
-  /* oXmplAppCtx = new ExampleAppContext("sqlodbdsn","sa","sqladmin").  */
+  oXmplAppCtx = new ExampleAppContext("sqlodbdsn","sa","sqladmin"). 
   
   /*
   oXmplAppCtx :oCustomerDao:GetCustomerById(1, output table ttCustomer by-reference).
@@ -54,15 +54,16 @@ do on error undo, throw:
   */
   
   empty temp-table ttCustomer.
-  do i = 1 to 1:
+  do i = 1 to 10000:
     create ttCustomer.
-    assign ttCustomer.sortOrder=-76543210
+    assign ttCustomer.sortOrder=-76543210 + i
 	       ttCustomer.customerid=i
            ttCustomer.customername='customer ' + string(customerId)
 		   ttCustomer.annualincome=123.45
 		   ttCustomer.isactive = ?
 		   ttCustomer.birthdate = /* date(2,22,2002) */ /* today */ date(5,2,1950)
-		   ttCustomer.createdon = now /* datetime(5, 2, 1950, 0, 0, 0, 1 ) */.
+		   ttCustomer.createdon = now  /* datetime(5, 2, 1950, 0, 0, 0, 1 ) */
+		   ttCustomer.signedoff = datetime-tz(3, 4, 1999, 5, 6, 7, 888, 60 ) .
   end.
   
   message "running example" ttCustomer.annualincome view-as alert-box.

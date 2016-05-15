@@ -51,8 +51,11 @@ CLASS net.universe.oe.odbc.examples.customer.CustomerDao:
     /* assign cSQL = 'insert into {&CUSTOMER_DB_TABLE} ("sortOrder", "customerId", "customerName") values(?,?,?)'. */
 	
 
-	assign cSQL = 'insert into testtable (intf1, intf2, charf1, logf1, decf1, datf1, datimf1) values(?,?,?,?,?,?,?)'.
+    assign cSQL = 'insert into testtable (intf1, intf2, charf1, logf1, decf1, datf1, datimf1, datimtzf1) values(?,?,?,?,?,?,?,?)'.
     
+	/* assign cSQL = 'insert into testtable (intf1, intf2, charf1, logf1, decf1, datf1, datimf1) values(?,?,?,?,?,?,?)'. */
+	/* assign cSQL = 'insert into testtable (intf1, intf2, charf1, logf1, decf1, datf1, datimtzf1) values(?,?,?,?,?,?,?)'. */
+	
     oOdbcPStmt = oOdbcCon:prepareStatement(cSQL).
 
     oBufferParamsMapper = new OEOdbcBufferParamsMapper(input table ttCustomer by-reference).
