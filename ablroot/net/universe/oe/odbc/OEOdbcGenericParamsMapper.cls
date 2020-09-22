@@ -173,7 +173,7 @@ CLASS net.universe.oe.odbc.OEOdbcGenericParamsMapper IMPLEMENTS IOEOdbcParamsMap
     
     DEF VAR iRetVal       AS INT NO-UNDO.
     DEF VAR iStmtHandle   AS {&DEF_SQLHSTMT} NO-UNDO.
-    def var iPointerValue as int no-undo.
+    def var iPointerValue as {&DEF_POINTER} no-undo.
     
     DEF VAR hCallSQLBindParamInt       AS HANDLE NO-UNDO.
     DEF VAR hCallSQLBindParamChar      AS HANDLE NO-UNDO.
