@@ -172,7 +172,12 @@ CLASS net.universe.oe.odbc.OEOdbcCodeWritingResultsMapper INHERITS OEOdbcResults
           FOR each ttOEOdbcColumnMetadata where columnname <> '' no-lock by columnindex:
             assign cRepeatPartNew = Replace(cRepeatPart, cTagOEOdbcFieldName, ttOEOdbcColumnMetadata.ColumnName).
             IF index(cRepeatPartNew, cTagOEOdbcABLFieldType) > 0 then
+            DO:
               assign cRepeatPartNew = replace(cRepeatPartNew, cTagOEOdbcABLFieldType, getABLFieldTypeBySQLFieldType(ttOEOdbcColumnMetadata.DataType)).
+              IF getABLFieldTypeBySQLFieldType(ttOEOdbcColumnMetadata.DataType) = "DECIMAL" AND 
+                 ttOEOdbcColumnMetadata.DecimalDigits <> ? THEN 
+                cRepeatPartNew = cRepeatPartNew + " DECIMALS " + STRING(ttOEOdbcColumnMetadata.DecimalDigits).
+            END.  
     
             IF index(cRepeatPartNew, cTagOEOdbcABLMemptrGetFunc) > 0 then
               assign cRepeatPartNew = replace(cRepeatPartNew, cTagOEOdbcABLMemptrGetFunc, getABLMemptrGetfuncBySQLFieldType(ttOEOdbcColumnMetadata.DataType)).

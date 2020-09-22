@@ -63,6 +63,28 @@ class net.universe.oe.odbc.OEOdbcEnvironment:
     return oCon.
   end method.
 
+  /* - windows : The components of the connection string can be found in the register when an ODBC datasource is created :
+       HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ODBC\ODBC.INI
+     - linux :
+       /etc/odbcinst.ini
+           
+     Connection string formats :
+     - PostgreSQL windows   : "DRIVER=~{PostgreSQL Unicode~};Servername=<server>;Port=<port>;Database=<dbname>;UID=<username>;Password=<password>"
+     - PostgreSQL linux     : "DRIVER=PostgreSQL;Servername=<server>;Port=<port>;Database=<dbname>;UID=<username>;Password=<password>"
+     - SAP HANA windows     : "DRIVER=~{HDBODBC32~};CHAR_AS_UTF8=1;ServerNode=<server>:<port>;UID=<userame>;PWD=<password>"
+     - SAP HANA linux       : "DRIVER=HANA;CHAR_AS_UTF8=1;ServerNode=<server>:<port>;UID=<userame>;PWD=<password>"
+      
+  */
+  method PUBLIC OEOdbcConnection getConnection(input cConnectionString as char):
+     
+    def var iDbcHandle as {&DEF_SQLHDBC} no-undo init 0.
+    def var oCon as OEOdbcConnection no-undo.
+        
+    assign oCon = new OEOdbcConnection(this-object, cConnectionString). 
+    
+    return oCon.
+  end method.
+
   /* This needs to be fixed more structurally */
   method public void setOdbcVersion(input iOdbcVersion as int):
  

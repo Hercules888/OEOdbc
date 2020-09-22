@@ -55,13 +55,14 @@ http://www.gnu.org/licenses/lgpl-2.1.txt
 &global-define SQL_NEED_DATA 99
 
 &global-define SQLRETURN  short
-&if opsys = 'win32' &then
+&if PROCESS-ARCHITECTURE = 32 &then
   &global-define SQLHANDLE  long
   &global-define SQLHANDLE_PTR long
   &global-define SQLHENV long
   &global-define SQLHDBC long
   &global-define SQLHSTMT long
   &global-define POINTER long
+  &global-define SQLHWND long
 &else
   &global-define SQLHANDLE  int64
   &global-define SQLHANDLE_PTR int64
@@ -69,6 +70,7 @@ http://www.gnu.org/licenses/lgpl-2.1.txt
   &global-define SQLHDBC int64
   &global-define SQLHSTMT int64
   &global-define POINTER int64
+  &global-define SQLHWND int64
 &endif
 &global-define SQLSMALLINT short
 &global-define SQLUSMALLINT short
@@ -85,18 +87,20 @@ http://www.gnu.org/licenses/lgpl-2.1.txt
 &global-define DEF_SQLSMALLINT int
 &global-define DEF_SQLRETURN int
 
-&if opsys = 'win32' &then
+&if PROCESS-ARCHITECTURE = 32 &then
   &global-define DEF_SQLHANDLE int
   &global-define DEF_SQLHENV int
   &global-define DEF_SQLHDBC int
   &global-define DEF_SQLHSTMT int
   &global-define DEF_POINTER int
+  &global-define DEF_SQLHWND int
 &else
   &global-define DEF_SQLHANDLE int64
   &global-define DEF_SQLHENV int64
   &global-define DEF_SQLHDBC int64
   &global-define DEF_SQLHSTMT int64
   &global-define DEF_POINTER int64
+  &global-define DEF_SQLHWND int64
 &endif
 &global-define DEF_SQLPOINTER memptr
 &global-define DEF_SQLULEN int

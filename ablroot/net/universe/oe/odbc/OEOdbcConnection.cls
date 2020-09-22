@@ -55,6 +55,34 @@ class net.universe.oe.odbc.OEOdbcConnection:
       
   end constructor.
 
+  constructor public OEOdbcConnection(input oOdbcEnv as OEOdbcEnvironment, input cConnectionString as char):
+    def var iRetVal               as {&DEF_SQLSMALLINT} no-undo.
+    def var iEnvHandle            as {&DEF_SQLHENV}     no-undo.    
+    def var mpOutConnectionString as {&DEF_SQLCHAR_OUT} no-undo.   
+    def var iStringLength2Ptr     as {&DEF_SQLSMALLINT} no-undo.
+         
+    if not valid-object(oOdbcEnv) then OEOdbcUtil:Instance:throwException("No environment specified to allocate Database Connection").
+    iEnvHandle = oOdbcEnv:iEnvHandle.
+
+    /* Allocate Database Connection Handle */
+    iRetVal = OEOdbcApi:Instance:SQLAllocHandle({&SQL_HANDLE_DBC}, iEnvHandle, output iDbcHandle).
+    OEOdbcUtil:Instance:throwExceptionIfRequiredWithExtras({&SQL_HANDLE_ENV}, iEnvHandle, iRetVal, "Unable to allocate Database Connection").
+    
+    setLoginTimeout(5).           
+             
+    set-size(mpOutConnectionString) = 1024.    
+    assign iStringLength2Ptr = 0.    
+    
+    iRetVal = OEOdbcApi:Instance:SQLDriverConnect(iDbcHandle,0,cConnectionString,mpOutConnectionString,
+                                                  0,input-output iStringLength2Ptr,0).                                   
+    OEOdbcUtil:Instance:throwExceptionIfRequiredWithExtras({&SQL_HANDLE_DBC}, iDbcHandle, iRetVal, "Unable open Database Connection").
+        
+    finally:
+      set-size(mpOutConnectionString) = 0.
+    end.
+              
+  end constructor.
+  
   destructor public OEOdbcConnection():
     def var iRetVal as int no-undo.
         

@@ -96,6 +96,18 @@ CLASS net.universe.oe.odbc.OEOdbcGenericParamsMapper IMPLEMENTS IOEOdbcParamsMap
       
   END METHOD.
 
+  METHOD PUBLIC VOID setDecimal
+     ( INPUT iIdx     AS INTEGER, 
+       INPUT ideValue AS DECIMAL ):
+         
+    THIS-OBJECT:setString
+      ( iIdx,
+        REPLACE(STRING(ideValue), SESSION:NUMERIC-DECIMAL-POINT, ".") ).
+
+    RETURN. 
+      
+  END METHOD.  
+
   METHOD PUBLIC VOID setBit(INPUT iIdx AS INT, INPUT lValue AS LOG):
     FIND FIRST ttParam WHERE ttParam.paramIdx = iIdx EXCLUSIVE-LOCK NO-ERROR.
     IF NOT AVAIL ttParam THEN DO: 
@@ -160,7 +172,7 @@ CLASS net.universe.oe.odbc.OEOdbcGenericParamsMapper IMPLEMENTS IOEOdbcParamsMap
     */
     
     DEF VAR iRetVal       AS INT NO-UNDO.
-    DEF VAR iStmtHandle   AS INT NO-UNDO.
+    DEF VAR iStmtHandle   AS {&DEF_SQLHSTMT} NO-UNDO.
     def var iPointerValue as int no-undo.
     
     DEF VAR hCallSQLBindParamInt       AS HANDLE NO-UNDO.
@@ -183,7 +195,6 @@ CLASS net.universe.oe.odbc.OEOdbcGenericParamsMapper IMPLEMENTS IOEOdbcParamsMap
            hCallSQLBindParamLong      = OEOdbcApi:Instance:getCallHdlSQLBindParamLong()
            hCallSQLBindParamDate      = OEOdbcApi:Instance:getCallHdlSQLBindParamDate()
            hCallSQLBindParamTimestamp = OEOdbcApi:Instance:getCallHdlSQLBindParamTimestamp().
-    
     hCallSQLBindParamInt:SET-PARAMETER       (1,  "{&SQLHSTMT}", "input", iStmtHandle).
     hCallSQLBindParamChar:set-parameter      (1,  "{&SQLHSTMT}", "input", iStmtHandle).
     hCallSQLBindParamBit:set-parameter       (1,  "{&SQLHSTMT}", "input", iStmtHandle).
@@ -194,7 +205,6 @@ CLASS net.universe.oe.odbc.OEOdbcGenericParamsMapper IMPLEMENTS IOEOdbcParamsMap
 
     def var mStrlenOrIndic as memptr no-undo.
     def var lValueIsNull   as log    no-undo.
-    
 
     FOR EACH ttParam NO-LOCK:
       /* if ttParam.Len_or_indic <> {&SQL_NULL_DATA} THEN DO: */

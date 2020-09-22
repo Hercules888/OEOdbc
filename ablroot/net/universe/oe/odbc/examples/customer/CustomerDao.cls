@@ -50,15 +50,15 @@ CLASS net.universe.oe.odbc.examples.customer.CustomerDao:
     oCustomerParamsMapper  = new OEOdbcGenericParamsMapper().
     oCustomerParamsMapper:setInt(1, 3). 
     oCustomerParamsMapper:setString(2, "Junior Doe").
-    /*    
-    oCustomerParamsMapper:setDouble(3, 531.0246). 
-    oCustomerParamsMapper:setSex(4, "M"). 
-    oCustomerParamsMapper:setState(5, "IL"). 
+    oCustomerParamsMapper:setDecimal(3, 531.0246). 
+    oCustomerParamsMapper:setString(4, "M"). 
+    oCustomerParamsMapper:setString(5, "IL"). 
     oCustomerParamsMapper:setDate(6, date(1,31,2007)). 
     oCustomerParamsMapper:setTimestamp(7, now). 
-    */
-
-    ASSIGN cSQL = 'insert into {&CUSTOMER_DB_TABLE} ("customerId", "customerName") values(?,?)'.
+	oCustomerParamsMapper:setBit(8, true). 
+    
+    //ASSIGN cSQL = 'insert into {&CUSTOMER_DB_TABLE} ("customerId", "customerName") values(?,?)'.
+	ASSIGN cSQL = 'insert into {&CUSTOMER_DB_TABLE} ("customerId", "customerName", "AnnualIncome", "Sex", "State", "birthDate", "createdOn" "isActive") values(?,?,?,?,?,?,?,?)'.
     
     oOdbcPStmt = oOdbcCon:prepareStatement(cSQL).
 
@@ -75,6 +75,7 @@ CLASS net.universe.oe.odbc.examples.customer.CustomerDao:
   method public int GetAllCustomers(output table ttCustomer):
      return GetCustomerById(?, output table ttCustomer by-reference).
   end method.
+  */
   METHOD PUBLIC INT GetAllCustomersByCallback(output table ttCustomer, 
                                               input oResultsCallback as IOEOdbcResultsCallback,
                                               input iNrOfRecsPerBatch as int):
@@ -101,7 +102,7 @@ CLASS net.universe.oe.odbc.examples.customer.CustomerDao:
     END FINALLY.
 
   END METHOD.  
-  */
+  
   METHOD PUBLIC INT GetCustomerById(INPUT iCustomerId as int, output table ttCustomer):
 
     DEF VAR iNrOfRecs AS INT  NO-UNDO.

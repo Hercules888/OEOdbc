@@ -26,5 +26,6 @@ insert into "Customer"("customerId", "customerName", "isActive", "AnnualIncome",
 values(1, 'John Doe', true, 1234.567, 'M','MS', date '12/31/1980', current_timestamp);
 insert into "Customer"("customerId", "customerName", "isActive", "AnnualIncome", "Sex", "State", "birthDate", "createdOn")
 values(2, 'Jane Doe', false, 9876.54321, 'F','KS', date '12/31/1990', current_timestamp);
-
+insert into "Customer"
+select generate_series, 'User' || generate_series, false, 9876.54321, 'F','KS', date '31/12/1990', current_timestamp from generate_series(3, 1000000);
 

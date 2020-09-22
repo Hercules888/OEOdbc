@@ -32,6 +32,7 @@ class net.universe.oe.odbc.OEOdbcApi:
   def private var hCallSQLSetConnectAttr as handle no-undo.
   def private var hCallSQLDisconnect     as handle no-undo.
   def private var hCallSQLConnect        as handle no-undo.
+  def private var hCallSQLDriverConnect  as handle no-undo.
   def private var hCallSQLPrepare        as handle no-undo.
   def private var hCallSQLNumResultCols  as handle no-undo.
   def private var hCallSQLDescribeCol    as handle no-undo.
@@ -101,6 +102,7 @@ class net.universe.oe.odbc.OEOdbcApi:
     delete object hCallSQLSetConnectAttr no-error.
     delete object hCallSQLDisconnect     no-error.
     delete object hCallSQLConnect        no-error.
+    delete object hCallSQLDriverConnect  no-error.
     delete object hCallSQLPrepare        no-error.
     delete object hCallSQLNumResultCols  no-error.
     delete object hCallSQLDescribeCol    no-error.
@@ -186,6 +188,15 @@ class net.universe.oe.odbc.OEOdbcApi:
            hCallSQLConnect:num-parameters             = 7
            hCallSQLConnect:return-value-dll-type      = "{&SQLRETURN}"
            hCallSQLConnect:library-calling-convention = "{&DECLTYPE}".
+
+    create call hCallSQLDriverConnect.
+    assign hCallSQLDriverConnect:call-name                  = 'SQLDriverConnect'
+           hCallSQLDriverConnect:library                    = '{&LIBODBC_SO}'
+           hCallSQLDriverConnect:call-type                  = dll-call-type
+           hCallSQLDriverConnect:persistent                 = true
+           hCallSQLDriverConnect:num-parameters             = 8
+           hCallSQLDriverConnect:return-value-dll-type      = "{&SQLRETURN}"
+           hCallSQLDriverConnect:library-calling-convention = "{&DECLTYPE}".
 
     create call hCallSQLPrepare.
     assign hCallSQLPrepare:call-name                  = 'SQLPrepare'
@@ -487,6 +498,28 @@ class net.universe.oe.odbc.OEOdbcApi:
     hCallSQLConnect:set-parameter(7, "{&SQLSMALLINT}", "input", {&SQL_NTS}).
     hCallSQLConnect:invoke().
     return hCallSQLConnect:return-value.
+  
+  end method.
+  
+  /* https://msdn.microsoft.com/en-us/library/ms715433%28v=vs.85%29.aspx */
+  method public {&DEF_SQLRETURN} SQLDriverConnect (input ConnectionHandle        as {&DEF_SQLHDBC},
+                                                   input Windowhandle            as {&DEF_SQLHWND},
+                                                   input InConnectionString      as {&DEF_SQLCHAR},
+                                                   input OutConnectionString     as {&DEF_SQLCHAR_OUT},
+                                                   input BufferLength            as {&DEF_SQLSMALLINT},
+                                                   input-output StringLength2Ptr as {&DEF_SQLSMALLINT},
+                                                   input DriverCompletion        as {&DEF_SQLUSMALLINT}):
+ 
+    hCallSQLDriverConnect:set-parameter(1, "{&SQLHDBC}",     "input", ConnectionHandle).
+    hCallSQLDriverConnect:set-parameter(2, "{&SQLHWND}",     "input", Windowhandle).
+    hCallSQLDriverConnect:set-parameter(3, "{&SQLCHAR}",     "input", InConnectionString).
+    hCallSQLDriverConnect:set-parameter(4, "{&SQLSMALLINT}", "input", {&SQL_NTS}).
+    hCallSQLDriverConnect:set-parameter(5, "{&SQLCHAR}",     "input", OutConnectionString).
+    hCallSQLDriverConnect:set-parameter(6, "{&SQLSMALLINT}", "input", BufferLength).
+    hCallSQLDriverConnect:set-parameter(7, "{&SQLSMALLINT}", "input-output", StringLength2Ptr).
+    hCallSQLDriverConnect:set-parameter(8, "{&SQLSMALLINT}", "input", DriverCompletion).
+    hCallSQLDriverConnect:invoke().
+    return hCallSQLDriverConnect:return-value.
   
   end method.
   

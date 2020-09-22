@@ -23,12 +23,10 @@ http://www.gnu.org/licenses/lgpl-2.1.txt
 ----------------------------------------------------------------------*/
 
 using net.universe.oe.odbc.OEOdbcException.
-/* using net.universe.oe.odbc.IOEOdbcResultsCallback. */
+using net.universe.oe.odbc.IOEOdbcResultsCallback.
 using net.universe.oe.odbc.examples.ExampleAppContext.
 using net.universe.oe.odbc.examples.customer.CustomerDao.
-/*
 using net.universe.oe.odbc.examples.customer.CustomerResultsCallbackDemo.
-*/
 
 /* routine-level on error undo, throw. */
 
@@ -36,33 +34,29 @@ using net.universe.oe.odbc.examples.customer.CustomerResultsCallbackDemo.
 
 do on error undo, throw:
   def var oXmplAppCtx    as ExampleAppContext no-undo.
-  /* def var oCallback      as IOEOdbcResultsCallback no-undo. */
+  def var oCallback      as IOEOdbcResultsCallback no-undo.
   def var iStart         as int no-undo.
   def var i              as int no-undo.
   def var iNrOfLoops     as int no-undo init 10.
 
-  oXmplAppCtx = new ExampleAppContext("testdbdsn","postgres","pgadmin").
+  oXmplAppCtx = new ExampleAppContext("odbcdemo","postgres","pgmaster").
   
+  /*
   oXmplAppCtx :oCustomerDao:GetCustomerById(1, output table ttCustomer by-reference).
   for each ttCustomer no-lock:
     disp ttCustomer.
   end.
-  
-  /*
-  oXmplAppCtx :oCustomerDao:insertCustomers(input table ttCustomer by-reference).
   */
+  // oXmplAppCtx :oCustomerDao:insertCustomers(input table ttCustomer by-reference).
+  
 
   
-  /*
   oCallback = new CustomerResultsCallbackDemo().
   iStart = etime(false).
-  */
-  /*
-  oXmplAppCtx:oCustomerDao:GetAllCustomersByCallback(output table ttCustomer by-reference, oCallback, 2).
-  */
-  /*
-  oXmplAppCtx:oCustomerDao:GetAllCustomers(output table ttCustomer by-reference).
-  */
+  oXmplAppCtx:oCustomerDao:GetAllCustomersByCallback(output table ttCustomer by-reference, oCallback, 2500).
+  
+  // oXmplAppCtx:oCustomerDao:GetAllCustomers(output table ttCustomer by-reference).
+
   message "First run (with init) took " (etime(false) - iStart) " msec.".
 
   empty temp-table ttCustomer.
@@ -86,4 +80,5 @@ finally:
   if valid-object(oXmplAppCtx) then delete object oXmplAppCtx no-error.
   /* if valid-object(oCallback) then delete object oCallback no-error. */
 end finally.
+
 
