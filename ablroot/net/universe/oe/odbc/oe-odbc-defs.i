@@ -63,6 +63,9 @@ http://www.gnu.org/licenses/lgpl-2.1.txt
   &global-define SQLHSTMT long
   &global-define POINTER long
   &global-define SQLHWND long
+  &global-define SQLLEN long
+  &global-define SQLULEN long
+  &global-define SQLLEN_SIZE_IN_BYTES 4
 &else
   &global-define SQLHANDLE  int64
   &global-define SQLHANDLE_PTR int64
@@ -71,6 +74,10 @@ http://www.gnu.org/licenses/lgpl-2.1.txt
   &global-define SQLHSTMT int64
   &global-define POINTER int64
   &global-define SQLHWND int64
+  &global-define SQLLEN int64
+  &global-define SQLULEN int64
+  &global-define SQLLEN_SIZE_IN_BYTES 8
+  &global-define SQLULEN_SIZE_IN_BYTES 8
 &endif
 &global-define SQLSMALLINT short
 &global-define SQLUSMALLINT short
@@ -80,8 +87,6 @@ http://www.gnu.org/licenses/lgpl-2.1.txt
 &global-define SQLINTEGER long
 &global-define SQLPOINTER memptr
 
-&global-define SQLLEN long
-&global-define SQLULEN long
 
 &global-define DEF_SQLINTEGER int
 &global-define DEF_SQLSMALLINT int

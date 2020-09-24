@@ -35,16 +35,17 @@ CLASS net.universe.oe.odbc.MemptrHolder:
   DEF PRIVATE VAR mStrlenOrInd AS MEMPTR NO-UNDO. /* Here we will add indicators for SQL */
 
   CONSTRUCTOR PUBLIC MemptrHolder():
-    SET-SIZE(mStrlenOrInd) = 4.
+    SET-SIZE(mStrlenOrInd) = {&SQLLEN_SIZE_IN_BYTES}.
   END CONSTRUCTOR.
 
   CONSTRUCTOR PUBLIC MemptrHolder(INPUT iSize AS INT):
     SET-SIZE(mMemptr) = iSize.
-    SET-SIZE(mStrlenOrInd) = 4.
+    SET-SIZE(mStrlenOrInd) = {&SQLLEN_SIZE_IN_BYTES}.
   END CONSTRUCTOR.
 
   /* Make sure that the memptr is freed when the holder is freed */
   DESTRUCTOR PUBLIC MemptrHolder():
+    message "destroying memptr".
     SET-SIZE(mMemptr) = 0.
     SET-SIZE(mStrlenOrInd) = 0.
   END DESTRUCTOR.
@@ -96,10 +97,10 @@ CLASS net.universe.oe.odbc.MemptrHolder:
 
   METHOD PUBLIC VOID putInt(INPUT iVal AS INT):
     if iVal = ? then DO: 
-      put-long(mStrlenOrInd, 1) = {&SQL_NULL_DATA}.
+      put-{&SQLLEN}(mStrlenOrInd, 1) = {&SQL_NULL_DATA}.
       return.
     END.
-    put-long(mStrlenOrInd, 1) = 0.
+    put-{&SQLLEN}(mStrlenOrInd, 1) = 0.
     
     if mMemptr <> ? and GET-SIZE(mMemptr) <> 4 THEN SET-SIZE(mMemptr) = 0.
     SET-SIZE(mMemptr) = 4.
@@ -108,10 +109,10 @@ CLASS net.universe.oe.odbc.MemptrHolder:
   
   METHOD PUBLIC VOID putInt64(INPUT iVal AS INT64):
     if iVal = ? then DO: 
-      put-long(mStrlenOrInd, 1) = {&SQL_NULL_DATA}.
+      put-{&SQLLEN}(mStrlenOrInd, 1) = {&SQL_NULL_DATA}.
       return.
     END.
-    put-long(mStrlenOrInd, 1) = 0.
+    put-{&SQLLEN}(mStrlenOrInd, 1) = 0.
    
     IF mMemptr <> ? AND GET-SIZE(mMemptr) <> 8 THEN SET-SIZE(mMemptr) = 0.
     SET-SIZE(mMemptr) = 8.
@@ -120,10 +121,10 @@ CLASS net.universe.oe.odbc.MemptrHolder:
 
   METHOD PUBLIC VOID putChar(INPUT cVal AS char):
     if cVal = ? then DO: 
-      put-long(mStrlenOrInd, 1) = {&SQL_NULL_DATA}.
+      put-{&SQLLEN}(mStrlenOrInd, 1) = {&SQL_NULL_DATA}.
       return.
     END.
-    put-long(mStrlenOrInd, 1) = {&SQL_NTS}.
+    put-{&SQLLEN}(mStrlenOrInd, 1) = {&SQL_NTS}.
  
   
     def var iLength as int no-undo.
@@ -137,10 +138,10 @@ CLASS net.universe.oe.odbc.MemptrHolder:
 
   METHOD PUBLIC VOID putBit(INPUT lVal AS log):
     if lVal = ? then DO: 
-      put-long(mStrlenOrInd, 1) = {&SQL_NULL_DATA}.
+      put-{&SQLLEN}(mStrlenOrInd, 1) = {&SQL_NULL_DATA}.
       return.
     END.
-    put-long(mStrlenOrInd, 1) = 0.
+    put-{&SQLLEN}(mStrlenOrInd, 1) = 0.
   
     IF mMemptr <> ? AND GET-SIZE(mMemptr) <> 1 THEN SET-SIZE(mMemptr) = 0.
     SET-SIZE(mMemptr) = 1.
@@ -149,10 +150,10 @@ CLASS net.universe.oe.odbc.MemptrHolder:
 
   METHOD PUBLIC VOID putTimestamp(INPUT dtTimestamp AS DATETIME):
     if dtTimestamp = ? then DO: 
-      put-long(mStrlenOrInd, 1) = {&SQL_NULL_DATA}.
+      put-{&SQLLEN}(mStrlenOrInd, 1) = {&SQL_NULL_DATA}.
       return.
     END.
-    put-long(mStrlenOrInd, 1) = 0.
+    put-{&SQLLEN}(mStrlenOrInd, 1) = 0.
   
     IF mMemptr <> ? AND GET-SIZE(mMemptr) <> 16 THEN SET-SIZE(mMemptr) = 0.
     SET-SIZE(mMemptr) = 16.
@@ -183,10 +184,10 @@ CLASS net.universe.oe.odbc.MemptrHolder:
 
   METHOD PUBLIC VOID putDate(INPUT dtDate AS DATE):
     if dtDate = ? then DO: 
-      put-long(mStrlenOrInd, 1) = {&SQL_NULL_DATA}.
+      put-{&SQLLEN}(mStrlenOrInd, 1) = {&SQL_NULL_DATA}.
       return.
     END.
-    put-long(mStrlenOrInd, 1) = 0.
+    put-{&SQLLEN}(mStrlenOrInd, 1) = 0.
   	
     IF mMemptr <> ? AND GET-SIZE(mMemptr) <> 6 THEN SET-SIZE(mMemptr) = 0.
     SET-SIZE(mMemptr) = 6.
