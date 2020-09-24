@@ -34,6 +34,9 @@ CLASS net.universe.oe.odbc.OEOdbcGenericParamsMapper IMPLEMENTS IOEOdbcParamsMap
       FIELD paramType        AS INT
       FIELD paramValue       AS progress.lang.Object
       INDEX idxPK IS PRIMARY UNIQUE paramIdx.
+      
+   
+  def private var oPrevPStmt AS OEOdbcPreparedStatement no-undo.
 
 
   CONSTRUCTOR PUBLIC OEOdbcGenericParamsMapper():
@@ -162,6 +165,8 @@ CLASS net.universe.oe.odbc.OEOdbcGenericParamsMapper IMPLEMENTS IOEOdbcParamsMap
 
 
   METHOD PUBLIC VOID iterateAndMapParams(oPStmt AS OEOdbcPreparedStatement):
+    if valid-object(oPrevPStmt) and oPrevPStmt = oPStmt then return.
+  
     /*
     DEF VAR iLen_or_indic_Int       AS INT NO-UNDO.
     DEF VAR iLen_or_indic_Char      AS INT NO-UNDO init {&SQL_NTS}.
